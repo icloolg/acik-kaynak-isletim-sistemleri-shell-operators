@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2128;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #7d8590;
+    --green: #3fb950;
+    --green-dim: #1a3a24;
+    --blue: #58a6ff;
+    --blue-dim: #0d2044;
+    --amber: #d29922;
+    --amber-dim: #2d2000;
+    --red: #f85149;
+    --red-dim: #3d1010;
+    --purple: #bc8cff;
+    --teal: #39d353;
+    --prompt: #f0f6fc;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.7;
+    padding: 0;
+    min-height: 100vh;
+  }
+
+  /* Header */
+  .hero {
+    background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #0d1117 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 2.5rem 2rem 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse at 20% 50%, rgba(88, 166, 255, 0.06) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(63, 185, 80, 0.06) 0%, transparent 50%);
+    pointer-events: none;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--green-dim); border: 1px solid var(--green);
+    color: var(--green); font-size: 11px; font-weight: 600;
+    padding: 3px 10px; border-radius: 20px; letter-spacing: 0.05em;
+    text-transform: uppercase; margin-bottom: 1rem;
+  }
+  .hero-badge::before { content: '●'; font-size: 8px; }
+  .hero h1 {
+    font-family: var(--font-mono);
+    font-size: clamp(1.4rem, 3vw, 2rem);
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.3;
+    margin-bottom: 0.5rem;
+  }
+  .hero h1 span { color: var(--green); }
+  .hero-sub {
+    color: var(--muted); font-size: 13px;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    margin-top: 1rem;
+  }
+  .hero-sub span {
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  /* Navigation tabs */
+  .nav-tabs {
+    display: flex; overflow-x: auto; gap: 0;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 0 1rem; position: sticky; top: 0; z-index: 100;
+  }
+  .tab {
+    padding: 12px 16px; font-size: 13px; font-weight: 500;
+    color: var(--muted); border: none; background: none; cursor: pointer;
+    border-bottom: 2px solid transparent; white-space: nowrap;
+    font-family: var(--font-sans); transition: color 0.15s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--text); border-bottom-color: var(--blue); }
+  .tab .dot { width: 6px; height: 6px; border-radius: 50%; }
+
+  /* Main layout */
+  .main { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+  /* Section */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* Progress indicator */
+  .progress-bar {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 2rem; flex-wrap: wrap;
+  }
+  .progress-step {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--muted);
+  }
+  .progress-step.done { color: var(--green); }
+  .progress-step.current { color: var(--blue); font-weight: 600; }
+  .progress-step .circle {
+    width: 20px; height: 20px; border-radius: 50%; border: 1px solid currentColor;
+    display: flex; align-items: center; justify-content: center; font-size: 10px;
+  }
+  .progress-step.done .circle { background: var(--green); color: #000; border-color: var(--green); }
+  .progress-arrow { color: var(--border); font-size: 12px; }
+
+  /* Concept block */
+  .concept-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px; margin: 1.5rem 0;
+  }
+  .concept-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 1rem;
+    border-left: 3px solid var(--blue);
+  }
+  .concept-card.stdin { border-left-color: var(--amber); }
+  .concept-card.stdout { border-left-color: var(--green); }
+  .concept-card.stderr { border-left-color: var(--red); }
+  .concept-card .fd {
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--muted); margin-bottom: 4px;
+  }
+  .concept-card .name {
+    font-weight: 600; font-size: 15px; margin-bottom: 6px;
+  }
+  .stdin .name { color: var(--amber); }
+  .stdout .name { color: var(--green); }
+  .stderr .name { color: var(--red); }
+  .concept-card .desc { font-size: 13px; color: var(--muted); }
+
+  /* Flow diagram */
+  .flow-diagram {
+    display: flex; align-items: center; justify-content: center;
+    gap: 0; margin: 2rem 0; flex-wrap: wrap; row-gap: 12px;
+  }
+  .flow-node {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 14px; text-align: center;
+    min-width: 100px;
+  }
+  .flow-node .label { font-size: 11px; color: var(--muted); }
+  .flow-node .val { font-family: var(--font-mono); font-size: 13px; font-weight: 600; }
+  .flow-arrow {
+    padding: 0 8px; color: var(--muted); font-size: 18px; font-weight: 300;
+  }
+
+  /* Terminal block */
+  .terminal {
+    background: #010409;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 1rem 0;
+    font-family: var(--font-mono);
+  }
+  .terminal-header {
+    background: var(--surface2); border-bottom: 1px solid var(--border);
+    padding: 8px 12px; display: flex; align-items: center; gap: 8px;
+  }
+  .term-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .term-dot.r { background: #ff5f57; }
+  .term-dot.y { background: #febc2e; }
+  .term-dot.g { background: #28c840; }
+  .term-title { color: var(--muted); font-size: 11px; margin-left: 4px; }
+  .terminal-body { padding: 1rem 1.25rem; }
+  .line { display: flex; margin: 2px 0; font-size: 13px; line-height: 1.8; }
+  .line .prompt { color: var(--green); margin-right: 8px; flex-shrink: 0; }
+  .line .cmd { color: var(--prompt); }
+  .line .comment { color: var(--muted); font-style: italic; }
+  .line .output { color: #8b949e; }
+  .line .error { color: var(--red); }
+
+  /* Operator table */
+  .op-table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+  .op-table th {
+    text-align: left; font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--muted);
+    padding: 8px 12px; border-bottom: 1px solid var(--border);
+    font-weight: 500;
+  }
+  .op-table td {
+    padding: 10px 12px; border-bottom: 1px solid #21262d;
+    font-size: 13px; vertical-align: top;
+  }
+  .op-table tr:hover td { background: var(--surface2); }
+  .op-code {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+    background: var(--surface2); padding: 2px 8px; border-radius: 4px;
+    border: 1px solid var(--border); white-space: nowrap;
+  }
+
+  /* Difficulty badge */
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 20px;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.03em;
+  }
+  .badge.easy { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
+  .badge.mid { background: var(--amber-dim); color: var(--amber); border: 1px solid var(--amber); }
+  .badge.hard { background: var(--red-dim); color: var(--red); border: 1px solid var(--red); }
+
+  /* Example block */
+  .example-block { margin: 1.5rem 0; }
+  .example-header {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+  }
+  .example-header h4 { font-size: 14px; font-weight: 500; }
+  .example-meta { font-size: 12px; color: var(--muted); margin-left: auto; }
+
+  /* Explanation box */
+  .explain-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 3px solid var(--blue); border-radius: 0 8px 8px 0;
+    padding: 10px 14px; margin-top: 6px; font-size: 13px; color: #8b949e;
+  }
+  .explain-box strong { color: var(--text); font-weight: 500; }
+
+  /* Real world */
+  .realworld {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 14px; margin-top: 8px;
+    display: flex; gap: 10px; font-size: 13px;
+  }
+  .realworld .icon { font-size: 16px; flex-shrink: 0; }
+  .realworld .content { color: var(--muted); }
+  .realworld .content strong { color: var(--text); display: block; font-size: 12px; margin-bottom: 2px; }
+
+  /* Section heading */
+  .sec-title {
+    font-size: 20px; font-weight: 600; margin-bottom: 0.4rem;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .sec-title .num {
+    font-family: var(--font-mono); font-size: 12px;
+    color: var(--muted); font-weight: 400;
+  }
+  .sec-desc { color: var(--muted); font-size: 14px; margin-bottom: 1.5rem; }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+
+  /* Speaker notes */
+  .speaker-notes {
+    background: rgba(210, 153, 34, 0.08); border: 1px solid rgba(210, 153, 34, 0.3);
+    border-radius: 8px; padding: 14px 16px; margin: 1.5rem 0;
+  }
+  .speaker-notes .sn-label {
+    font-size: 11px; font-weight: 600; color: var(--amber);
+    text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;
+  }
+  .speaker-notes p { font-size: 13px; color: #c9a842; }
+
+  /* Summary cheatsheet */
+  .cheat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+  .cheat-item {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; padding: 10px 12px;
+  }
+  .cheat-item code {
+    font-family: var(--font-mono); font-size: 14px; font-weight: 600;
+    color: var(--green); display: block; margin-bottom: 4px;
+  }
+  .cheat-item p { font-size: 12px; color: var(--muted); }
+
+  /* Timer bar */
+  .timer-bar {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 16px; margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .timer-display {
+    font-family: var(--font-mono); font-size: 20px; font-weight: 600;
+    color: var(--green); min-width: 60px;
+  }
+  .timer-display.warning { color: var(--amber); }
+  .timer-display.danger { color: var(--red); }
+  .timer-progress {
+    flex: 1; height: 4px; background: var(--border);
+    border-radius: 2px; overflow: hidden;
+  }
+  .timer-fill {
+    height: 100%; background: var(--green); border-radius: 2px;
+    transition: width 1s linear, background 1s;
+  }
+  .timer-fill.warning { background: var(--amber); }
+  .timer-fill.danger { background: var(--red); }
+  .timer-btn {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); font-family: var(--font-sans); font-size: 12px;
+    padding: 6px 12px; border-radius: 6px; cursor: pointer;
+    white-space: nowrap;
+  }
+  .timer-btn:hover { border-color: var(--blue); color: var(--blue); }
+
+  /* Scroll anchor */
+  .anchor { scroll-margin-top: 80px; }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .hero { padding: 1.5rem 1rem 1.2rem; }
+    .main { padding: 1.5rem 1rem; }
+    .concept-grid { grid-template-columns: 1fr; }
+    .flow-diagram { flex-direction: column; }
+    .flow-arrow { transform: rotate(90deg); }
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">Açık Kaynak Kodlu İşletim Sistemleri ve Programlama</div>
+  <h1>Shell Operatörleri <br>Stdin · Stdout · Stderr</h1>
+  <div class="hero-sub">
+    <span>İclal GÜL</span>
+    <span>🖥 Bilgisayar Mühendisliği Yüksek Lisans</span>
+    <span>⏱ 10–15 dakika</span>
+  
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav-tabs">
+  <button class="tab active" onclick="showSection('intro')" id="tab-intro">
+    <div class="dot" style="background:#58a6ff"></div> Giriş
+  </button>
+  <button class="tab" onclick="showSection('stdout')" id="tab-stdout">
+    <div class="dot" style="background:#3fb950"></div> Stdout
+  </button>
+  <button class="tab" onclick="showSection('stdin')" id="tab-stdin">
+    <div class="dot" style="background:#d29922"></div> Stdin
+  </button>
+  <button class="tab" onclick="showSection('stderr')" id="tab-stderr">
+    <div class="dot" style="background:#f85149"></div> Stderr
+  </button>
+  <button class="tab" onclick="showSection('scenario')" id="tab-scenario">
+    <div class="dot" style="background:#bc8cff"></div> Senaryo
+  </button>
+  <button class="tab" onclick="showSection('summary')" id="tab-summary">
+    <div class="dot" style="background:#39d353"></div> Özet
+  </button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+<!-- ====== GİRİŞ ====== -->
+<div class="section active" id="section-intro">
+
+  <div class="timer-bar">
+    <div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:2px;">SÜRE</div>
+      <div class="timer-display" id="timer-display">15:00</div>
+    </div>
+    <div class="timer-progress"><div class="timer-fill" id="timer-fill" style="width:100%"></div></div>
+    <button class="timer-btn" onclick="startTimer()">▶ Başlat</button>
+    <button class="timer-btn" onclick="resetTimer()">↺ Sıfırla</button>
+  </div>
+
+  <div class="progress-bar">
+    <div class="progress-step current"><div class="circle">1</div> Giriş</div>
+    <div class="progress-arrow">›</div>
+    <div class="progress-step"><div class="circle">2</div> Stdout</div>
+    <div class="progress-arrow">›</div>
+    <div class="progress-step"><div class="circle">3</div> Stdin</div>
+    <div class="progress-arrow">›</div>
+    <div class="progress-step"><div class="circle">4</div> Stderr</div>
+    <div class="progress-arrow">›</div>
+    <div class="progress-step"><div class="circle">5</div> Senaryo</div>
+    <div class="progress-arrow">›</div>
+    <div class="progress-step"><div class="circle">6</div> Özet</div>
+  </div>
+
+  <div class="sec-title"><span class="num">01</span> Üç Standart Dosya</div>
+  <p class="sec-desc">Bir komut çalıştırdığında Linux her programa otomatik olarak 3 "dosya kanalı" açar.</p>
+
+  <div class="concept-grid">
+    <div class="concept-card stdin">
+      <div class="fd">FD: 0</div>
+      <div class="name">stdin</div>
+      <div class="desc">Standart girdi.<br>Varsayılan: Klavye</div>
+    </div>
+    <div class="concept-card stdout">
+      <div class="fd">FD: 1</div>
+      <div class="name">stdout</div>
+      <div class="desc">Standart çıktı.<br>Varsayılan: Terminal ekranı</div>
+    </div>
+    <div class="concept-card stderr">
+      <div class="fd">FD: 2</div>
+      <div class="name">stderr</div>
+      <div class="desc">Standart hata.<br>Varsayılan: Terminal ekranı</div>
+    </div>
+  </div>
+
+  <div class="speaker-notes">
+    <div class="sn-label">🎙 Günlük Hayat Örneği</div>
+    <p>Fabrika analojisi: stdin = hammadde girişi, stdout = ürün çıkışı, stderr = kalite kontrol alarmı.</p>
+  </div>
+
+  <div class="flow-diagram">
+    <div class="flow-node"><div class="label">Kaynak</div><div class="val" style="color:var(--amber)">Klavye / Dosya</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node"><div class="label">stdin (0)</div><div class="val" style="color:var(--amber)">girdi</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node" style="border-color:var(--blue)"><div class="label">Program</div><div class="val" style="color:var(--blue)">ls, sort, cat…</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node"><div class="label">stdout (1)</div><div class="val" style="color:var(--green)">çıktı</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node"><div class="label">Hedef</div><div class="val" style="color:var(--green)">Ekran / Dosya</div></div>
+  </div>
+
+  <p style="font-size:13px;color:var(--muted);text-align:center">Yönlendirme operatörleri bu kanalları başka yerlere yönlendirir.</p>
+
+  <hr class="divider">
+
+  <h3 style="font-size:14px;font-weight:500;margin-bottom:8px">Temel Operatörler</h3>
+  <table class="op-table">
+    <tr><th>Operatör</th><th>İşlevi</th><th>Kanal</th></tr>
+    <tr><td><span class="op-code">&gt;</span></td><td>stdout'u dosyaya yazar (overwrite,üzerine)</td><td style="color:var(--green)">stdout</td></tr>
+    <tr><td><span class="op-code">&gt;&gt;</span></td><td>stdout'u dosyaya ekler(append)</td><td style="color:var(--green)">stdout</td></tr>
+    <tr><td><span class="op-code">&lt;</span></td><td>stdin'i dosyadan okur</td><td style="color:var(--amber)">stdin</td></tr>
+    <tr><td><span class="op-code">&lt;&lt;</span></td><td>here-document</td><td style="color:var(--amber)">stdin</td></tr>
+    <tr><td><span class="op-code">2&gt;</span></td><td>stderr'i dosyaya yazar</td><td style="color:var(--red)">stderr</td></tr>
+    <tr><td><span class="op-code">2&gt;&amp;1</span></td><td>stderr'i stdout'a birleştirir</td><td style="color:var(--red)">stderr</td></tr>
+    <tr><td><span class="op-code">2&gt;/dev/null</span></td><td>hataları siler/yok sayar</td><td style="color:var(--red)">stderr</td></tr>
+  </table>
+
+  <button onclick="showSection('stdout')" style="background:var(--green);color:#000;border:none;border-radius:6px;padding:10px 20px;font-family:var(--font-sans);font-size:14px;font-weight:600;cursor:pointer;margin-top:1rem;">Devam: Stdout Yönlendirme →</button>
+</div>
+
+<!-- ====== STDOUT ====== -->
+<div class="section" id="section-stdout">
+
+  <div class="progress-bar">
+    <div class="progress-step done"><div class="circle">✓</div> Giriş</div>
+    <div class="progress-arrow">›</div>
+    <div class="progress-step current"><div class="circle">2</div> Stdout</div>
+    <div class="progress-arrow">›</div>
+    <div class="progress-step"><div class="circle">3</div> Stdin</div>
+    <div class="progress-arrow">›</div>
+    <div class="progress-step"><div class="circle">4</div> Stderr</div>
+    <div class="progress-arrow">›</div>
+    <div class="progress-step"><div class="circle">5</div> Senaryo</div>
+  </div>
+
+  <div class="sec-title"><span class="num">02</span> Stdout Yönlendirme</div>
+  <p class="sec-desc">Normalde ekrana gelen çıktıyı bir dosyaya yönlendiririz.</p>
+
+  <table class="op-table" style="margin-bottom:1.5rem">
+    <tr><th>Operatör</th><th>Davranış</th><th>Dikkat!</th></tr>
+    <tr>
+      <td><span class="op-code">&gt; dosya</span></td>
+      <td>Dosyayı sıfırdan yazar</td>
+      <td style="color:var(--red);font-size:12px">Eski içerik silinir!</td>
+    </tr>
+    <tr>
+      <td><span class="op-code">&gt;&gt; dosya</span></td>
+      <td>Dosyanın sonuna ekler</td>
+      <td style="color:var(--green);font-size:12px">Güvenli, eski içerik korunur</td>
+    </tr>
+  </table>
+
+  <!-- Basit -->
+  <div class="example-block">
+    <div class="example-header">
+      <span class="badge easy">Basit</span>
+      <h4>Tarih bilgisini dosyaya kaydet</h4>
+      <span class="example-meta">~1 dk</span>
+    </div>
+    <div class="terminal">
+      <div class="terminal-header"><div class="term-dot r"></div><div class="term-dot y"></div><div class="term-dot g"></div><div class="term-title">bash</div></div>
+      <div class="terminal-body">
+        <div class="line"><span class="prompt">$</span><span class="cmd">date > bugunun_tarihi.txt</span></div>
+        <div class="line"><span class="prompt">$</span><span class="cmd">cat bugunun_tarihi.txt</span></div>
+        <div class="line"><span class="output">Mon Apr 13 14:32:08 TRT 2026</span></div>
+      </div>
+    </div>
+    <div class="explain-box">Ekran yerine <strong>bugunun_tarihi.txt</strong> dosyasına yazıldı. Dosya yoksa oluşturulur, varsa sıfırlanır.</div>
+  </div>
+
+  <!-- Orta -->
+  <div class="example-block">
+    <div class="example-header">
+      <span class="badge mid">Orta</span>
+      <h4>Listeye bilgi ekle, üstüne yazma</h4>
+      <span class="example-meta">~2 dk</span>
+    </div>
+    <div class="terminal">
+      <div class="terminal-header"><div class="term-dot r"></div><div class="term-dot y"></div><div class="term-dot g"></div><div class="term-title">bash</div></div>
+      <div class="terminal-body">
+        <div class="line"><span class="prompt">$</span><span class="cmd">ls -la /etc > sistem_dosyalari.txt</span></div>
+        <div class="line"><span class="prompt">$</span><span class="cmd">echo "--- Liste tamamlandı ---" >> sistem_dosyalari.txt</span></div>
+        <div class="line"><span class="prompt">$</span><span class="cmd">cat sistem_dosyalari.txt</span></div>
+        <div class="line"><span class="output">total 1234</span></div>
+        <div class="line"><span class="output">drwxr-xr-x 132 root root 12288 Apr 13 14:00 .</span></div>
+        <div class="line"><span class="output">...</span></div>
+        <div class="line"><span class="output">--- Liste tamamlandı ---</span></div>
+      </div>
+    </div>
+    <div class="explain-box">İlk satır <strong>&gt;</strong> ile yeni dosya oluşturdu. İkinci satır <strong>&gt;&gt;</strong> ile sonuna ekledi. Eğer <strong>&gt;</strong> kullansaydık, ls çıktısı kaybolurdu.</div>
+  </div>
+
+  <!-- Zor -->
+  <div class="example-block">
+    <div class="example-header">
+      <span class="badge hard">Zor</span>
+      <h4>Döngüde log dosyası oluştur</h4>
+      <span class="example-meta">~3 dk</span>
+    </div>
+    <div class="terminal">
+      <div class="terminal-header"><div class="term-dot r"></div><div class="term-dot y"></div><div class="term-dot g"></div><div class="term-title">bash</div></div>
+      <div class="terminal-body">
+        <div class="line"><span class="prompt">$</span><span class="cmd">for i in 1 2 3 4 5; do</span></div>
+        <div class="line"><span class="prompt">></span><span class="cmd"> &nbsp; echo "[$(date +%H:%M:%S)] İşlem $i tamamlandı" >> islem_logu.txt</span></div>
+        <div class="line"><span class="prompt">></span><span class="cmd">done</span></div>
+        <div class="line"><span class="prompt">$</span><span class="cmd">cat islem_logu.txt</span></div>
+        <div class="line"><span class="output">[14:32:01] İşlem 1 tamamlandı</span></div>
+        <div class="line"><span class="output">[14:32:01] İşlem 2 tamamlandı</span></div>
+        <div class="line"><span class="output">[14:32:02] İşlem 3 tamamlandı</span></div>
+        <div class="line"><span class="output">[14:32:02] İşlem 4 tamamlandı</span></div>
+        <div class="line"><span class="output">[14:32:02] İşlem 5 tamamlandı</span></div>
+      </div>
+    </div>
+    <div class="explain-box">Her iterasyonda <strong>&gt;&gt;</strong> ile yeni satır ekleniyor. Zaman damgalı log dosyası oluştu. Apache, Nginx gibi web sunucuları tam bu şekilde çalışır.</div>
+    <div class="realworld">
+      <div class="icon">🌐</div>
+      <div class="content"><strong>Gerçek Hayat: Web Sunucuları</strong>Apache, Nginx, PostgreSQL — tüm servisler olayları bu yöntemle log dosyasına yazar. Sistem yöneticileri hataları bu loglardan bulur.</div>
+    </div>
+  </div>
+
+  <button onclick="showSection('stdin')" style="background:var(--amber);color:#000;border:none;border-radius:6px;padding:10px 20px;font-family:var(--font-sans);font-size:14px;font-weight:600;cursor:pointer;margin-top:1rem;">Devam: Stdin Yönlendirme →</button>
+</div>
+
+<!-- ====== STDIN ====== -->
+<div class="section" id="section-stdin">
+
+  <div class="progress-bar">
+    <div class="progress-step done"><div class="circle">✓</div> Giriş</div>
+    <div class="progress-arrow">›</div>
+    <div class="progress-step done"><div class="circle">✓</div> Stdout</div>
+    <div class="progress-arrow">›</div>
+    <div class="progress-step current"><div class="circle">3</div> Stdin</div>
+    <div class="progress-arrow">›</div>
+    <div class="progress-step"><div class="circle">4</div> Stderr</div>
+    <div class="progress-arrow">›</div>
+    <div class="progress-step"><div class="circle">5</div> Senaryo</div>
+  </div>
+
+  <div class="sec-title"><span class="num">03</span> Stdin Yönlendirme</div>
+  <p class="sec-desc">Programın klavyeden değil, bir dosyadan ya da doğrudan terminalden okumasını sağlarız.</p>
+
+  <table class="op-table" style="margin-bottom:1.5rem">
+    <tr><th>Operatör</th><th>Davranış</th></tr>
+    <tr><td><span class="op-code">&lt; dosya</span></td><td>Dosyayı stdin olarak kullan</td></tr>
+    <tr><td><span class="op-code">&lt;&lt; KELIME</span></td><td>Here-document: KELIME görene kadar oku</td></tr>
+  </table>
+
+  <!-- Basit -->
+  <div class="example-block">
+    <div class="example-header">
+      <span class="badge easy">Basit</span>
+      <h4>Dosyadan sıralama</h4>
+      <span class="example-meta">~1 dk</span>
+    </div>
+    <div class="terminal">
+      <div class="terminal-header"><div class="term-dot r"></div><div class="term-dot y"></div><div class="term-dot g"></div><div class="term-title">bash</div></div>
+      <div class="terminal-body">
+        <div class="line"><span class="prompt">$</span><span class="cmd">echo -e "Zeynep\nAhmet\nBurak\nAyşe" > isimler.txt</span></div>
+        <div class="line"><span class="prompt">$</span><span class="cmd">sort &lt; isimler.txt</span></div>
+        <div class="line"><span class="output">Ahmet</span></div>
+        <div class="line"><span class="output">Ayşe</span></div>
+        <div class="line"><span class="output">Burak</span></div>
+        <div class="line"><span class="output">Zeynep</span></div>
+      </div>
+    </div>
+    <div class="explain-box"><strong>sort</strong> komutu normalde klavyeden bekler. <strong>&lt;</strong> ile dosyayı stdin olarak verdik.</div>
+  </div>
+
+  <!-- Orta -->
+  <div class="example-block">
+    <div class="example-header">
+      <span class="badge mid">Orta</span>
+      <h4>Stdin ve stdout birlikte yönlendir</h4>
+      <span class="example-meta">~2 dk</span>
+    </div>
+    <div class="terminal">
+      <div class="terminal-header"><div class="term-dot r"></div><div class="term-dot y"></div><div class="term-dot g"></div><div class="term-title">bash</div></div>
+      <div class="terminal-body">
+        <div class="line"><span class="prompt">$</span><span class="cmd">sort &lt; isimler.txt > sirali_isimler.txt</span></div>
+        <div class="line"><span class="prompt">$</span><span class="cmd">cat sirali_isimler.txt</span></div>
+        <div class="line"><span class="output">Ahmet</span></div>
+        <div class="line"><span class="output">Ayşe</span></div>
+        <div class="line"><span class="output">Burak</span></div>
+        <div class="line"><span class="output">Zeynep</span></div>
+      </div>
+    </div>
+    <div class="explain-box">Tek satırda hem girdi hem çıktı yönlendirme! <strong>isimler.txt → sort → sirali_isimler.txt</strong></div>
+  </div>
+
+  <!-- Zor: Here-doc -->
+  <div class="example-block">
+    <div class="example-header">
+      <span class="badge hard">Zor</span>
+      <h4>Here-Document — Çok satırlı metin girişi</h4>
+      <span class="example-meta">~3 dk</span>
+    </div>
+    <div class="terminal">
+      <div class="terminal-header"><div class="term-dot r"></div><div class="term-dot y"></div><div class="term-dot g"></div><div class="term-title">bash</div></div>
+      <div class="terminal-body">
+        <div class="line"><span class="prompt">$</span><span class="cmd">cat &lt;&lt; BITIS</span></div>
+        <div class="line"><span class="prompt">></span><span class="cmd">Merhaba,</span></div>
+        <div class="line"><span class="prompt">></span><span class="cmd">Yedekleme tamamlandı.</span></div>
+        <div class="line"><span class="prompt">></span><span class="cmd">Tarih: $(date)</span></div>
+        <div class="line"><span class="prompt">></span><span class="cmd">BITIS</span></div>
+        <div class="line"><span class="output">Merhaba,</span></div>
+        <div class="line"><span class="output">Yedekleme tamamlandı.</span></div>
+        <div class="line"><span class="output">Tarih: Mon Apr 13 14:32:08 TRT 2026</span></div>
+      </div>
+    </div>
+    <div class="explain-box"><strong>BITIS</strong> kelimesini görene kadar tüm satırlar stdin olarak alındı. Değişken ve komut ikamesi (<strong>$(date)</strong>) de çalıştı.</div>
+    <div class="realworld">
+      <div class="icon">📧</div>
+      <div class="content"><strong>Gerçek Hayat: Otomatik E-posta / Rapor Şablonları</strong>Cron ile çalışan script'ler, here-document kullanarak otomatik e-posta veya rapor şablonu oluşturur. Ayrıca bash script içinde SQL sorgusu göndermek için de kullanılır.</div>
+    </div>
+  </div>
+
+  <button onclick="showSection('stderr')" style="background:var(--red);color:#fff;border:none;border-radius:6px;padding:10px 20px;font-family:var(--font-sans);font-size:14px;font-weight:600;cursor:pointer;margin-top:1rem;">Devam: Stderr Yönlendirme →</button>
+</div>
+
+<!-- ====== STDERR ====== -->
+<div class="section" id="section-stderr">
+
+  <div class="progress-bar">
+    <div class="progress-step done"><div class="circle">✓</div> Giriş</div>
+    <div class="progress-arrow">›</div>
+    <div class="progress-step done"><div class="circle">✓</div> Stdout</div>
+    <div class="progress-arrow">›</div>
+    <div class="progress-step done"><div class="circle">✓</div> Stdin</div>
+    <div class="progress-arrow">›</div>
+    <div class="progress-step current"><div class="circle">4</div> Stderr</div>
+    <div class="progress-arrow">›</div>
+    <div class="progress-step"><div class="circle">5</div> Senaryo</div>
+  </div>
+
+  <div class="sec-title"><span class="num">04</span> Stderr Yönlendirme</div>
+  <p class="sec-desc">Hata mesajları stdout'tan ayrı bir kanaldadır — bu yüzden ayrıca yönlendirilmesi gerekir.</p>
+
+  <div class="speaker-notes">
+    <div class="sn-label">🎙 Anlatım Notu</div>
+    <p>stdout ve stderr ikisi de ekranda görünür ama farklı kanallardır! </p>
+  </div>
+
+  <table class="op-table" style="margin-bottom:1.5rem">
+    <tr><th>Operatör</th><th>Davranış</th></tr>
+    <tr><td><span class="op-code">2> dosya</span></td><td>Stderr'i dosyaya yaz (üzerine)</td></tr>
+    <tr><td><span class="op-code">2>> dosya</span></td><td>Stderr'i dosyaya ekle</td></tr>
+    <tr><td><span class="op-code">2>&1</span></td><td>Stderr'i stdout ile aynı yere gönder</td></tr>
+    <tr><td><span class="op-code">2>/dev/null</span></td><td>Hataları tamamen yok say</td></tr>
+  </table>
+
+  <!-- Basit -->
+  <div class="example-block">
+    <div class="example-header">
+      <span class="badge easy">Basit</span>
+      <h4>Hata mesajını dosyaya yakala</h4>
+      <span class="example-meta">~1 dk</span>
+    </div>
+    <div class="terminal">
+      <div class="terminal-header"><div class="term-dot r"></div><div class="term-dot y"></div><div class="term-dot g"></div><div class="term-title">bash</div></div>
+      <div class="terminal-body">
+        <div class="line"><span class="prompt">$</span><span class="cmd">cat olmayan_dosya.txt 2> hata_logu.txt</span></div>
+        <div class="line"><span class="comment">&nbsp;# Ekranda hiçbir şey görünmez</span></div>
+        <div class="line"><span class="prompt">$</span><span class="cmd">cat hata_logu.txt</span></div>
+        <div class="line"><span class="error">cat: olmayan_dosya.txt: No such file or directory</span></div>
+      </div>
+    </div>
+    <div class="explain-box">Hata ekrana çıkmadı, <strong>hata_logu.txt</strong> dosyasına gitti. Burası çoğunlukla gözden kaçan ama kritik bir kavram.</div>
+  </div>
+
+  <!-- Orta -->
+  <div class="example-block">
+    <div class="example-header">
+      <span class="badge mid">Orta</span>
+      <h4>Başarılı çıktı ve hataları ayır</h4>
+      <span class="example-meta">~2 dk</span>
+    </div>
+    <div class="terminal">
+      <div class="terminal-header"><div class="term-dot r"></div><div class="term-dot y"></div><div class="term-dot g"></div><div class="term-title">bash</div></div>
+      <div class="terminal-body">
+        <div class="line"><span class="prompt">$</span><span class="cmd">ls /etc /yanlis_klasor > basarili.txt 2> hatalar.txt</span></div>
+        <div class="line"><span class="prompt">$</span><span class="cmd">cat basarili.txt</span></div>
+        <div class="line"><span class="output">/etc:</span></div>
+        <div class="line"><span class="output">passwd  shadow  hosts  ...</span></div>
+        <div class="line"><span class="prompt">$</span><span class="cmd">cat hatalar.txt</span></div>
+        <div class="line"><span class="error">ls: cannot access '/yanlis_klasor': No such file or directory</span></div>
+      </div>
+    </div>
+    <div class="explain-box">Başarılı sonuçlar <strong>basarili.txt</strong>'e, hatalar <strong>hatalar.txt</strong>'e gitti. İkisi tamamen ayrı tutuldu.</div>
+  </div>
+
+  <!-- Zor -->
+  <div class="example-block">
+    <div class="example-header">
+      <span class="badge hard">Zor</span>
+      <h4>Gerçek dünya log sistemi — stdout ve stderr ayrı</h4>
+      <span class="example-meta">~3 dk</span>
+    </div>
+    <div class="terminal">
+      <div class="terminal-header"><div class="term-dot r"></div><div class="term-dot y"></div><div class="term-dot g"></div><div class="term-title">bash</div></div>
+      <div class="terminal-body">
+        <div class="line"><span class="prompt">$</span><span class="cmd">find /root -name "*.conf" > bulunanlar.txt 2> erisim_hatalari.txt</span></div>
+        <div class="line"><span class="prompt">$</span><span class="cmd">echo "Bulunan: $(wc -l &lt; bulunanlar.txt) dosya"</span></div>
+        <div class="line"><span class="output">Bulunan: 14 dosya</span></div>
+        <div class="line"><span class="prompt">$</span><span class="cmd">echo "Hata: $(wc -l &lt; erisim_hatalari.txt) erişim reddi"</span></div>
+        <div class="line"><span class="output">Hata: 3 erişim reddi</span></div>
+        <div class="line"><span class="prompt">$</span><span class="cmd"><span class="comment"># Hataları tamamen yok say:</span></span></div>
+        <div class="line"><span class="prompt">$</span><span class="cmd">find /root -name "*.conf" > bulunanlar.txt 2>/dev/null</span></div>
+      </div>
+    </div>
+    <div class="explain-box"><strong>2>/dev/null</strong> → Linux'ta /dev/null "kara delik" dosyasıdır, oraya yazılan her şey kaybolur. Hataları görmezden gelmek için kullanılır.</div>
+    <div class="realworld">
+      <div class="icon">🔧</div>
+      <div class="content"><strong>Gerçek Hayat: CI/CD Pipeline & Cron Job'lar</strong>GitHub Actions, Jenkins gibi sistemler başarılı çıktı ile hata loglarını kesinlikle ayırır. Cron job'lar genellikle 2>/dev/null ile gereksiz uyarıları filtreler.</div>
+    </div>
+  </div>
+
+  <button onclick="showSection('scenario')" style="background:var(--purple);color:#fff;border:none;border-radius:6px;padding:10px 20px;font-family:var(--font-sans);font-size:14px;font-weight:600;cursor:pointer;margin-top:1rem;">Devam: Gerçek Dünya Senaryosu →</button>
+</div>
+
+<!-- ====== SENARYO ====== -->
+<div class="section" id="section-scenario">
+
+  <div class="progress-bar">
+    <div class="progress-step done"><div class="circle">✓</div> Giriş</div>
+    <div class="progress-arrow">›</div>
+    <div class="progress-step done"><div class="circle">✓</div> Stdout</div>
+    <div class="progress-arrow">›</div>
+    <div class="progress-step done"><div class="circle">✓</div> Stdin</div>
+    <div class="progress-arrow">›</div>
+    <div class="progress-step done"><div class="circle">✓</div> Stderr</div>
+    <div class="progress-arrow">›</div>
+    <div class="progress-step current"><div class="circle">5</div> Senaryo</div>
+  </div>
+
+  <div class="sec-title"><span class="num">05</span> Hepsini Birleştiren Senaryo</div>
+  <p class="sec-desc">Sistem yöneticisi olarak gece otomatik çalışan bir yedekleme scripti yazıyorsunuz.</p>
+
+  
+
+  <div class="terminal">
+    <div class="terminal-header"><div class="term-dot r"></div><div class="term-dot y"></div><div class="term-dot g"></div><div class="term-title">yedekleme.sh</div></div>
+    <div class="terminal-body">
+      <div class="line"><span class="cmd">#!/bin/bash</span></div>
+      <div class="line"><span class="comment"># ─────────────────────────────────────────────────────</span></div>
+      <div class="line"><span class="comment"># Otomatik Yedekleme Scripti</span></div>
+      <div class="line"><span class="comment"># stdin + stdout + stderr hepsini kullanır</span></div>
+      <div class="line"><span class="comment"># ─────────────────────────────────────────────────────</span></div>
+      <div class="line"></div>
+      <div class="line"><span class="cmd">TARIH=$(date +%Y-%m-%d)</span></div>
+      <div class="line"><span class="cmd">LOG="yedek_${TARIH}.log"</span></div>
+      <div class="line"></div>
+      <div class="line"><span class="comment"># stdout → log dosyasına ekle  (>>)</span></div>
+      <div class="line"><span class="cmd">echo "=== Yedekleme başladı: $TARIH ===" >> "$LOG"</span></div>
+      <div class="line"></div>
+      <div class="line"><span class="comment"># stdin → yedeklenecek dizinleri dosyadan oku  (&lt;)</span></div>
+      <div class="line"><span class="cmd">while read dizin; do</span></div>
+      <div class="line"><span class="cmd">&nbsp;&nbsp;&nbsp;&nbsp;echo "Yedekleniyor: $dizin" >> "$LOG"</span></div>
+      <div class="line"><span class="cmd">&nbsp;&nbsp;&nbsp;&nbsp;cp -r "$dizin" /backup/ >> "$LOG" 2>> "hatalar_${TARIH}.log"</span></div>
+      <div class="line"><span class="cmd">done &lt; yedeklenecek_dizinler.txt</span></div>
+      <div class="line"></div>
+      <div class="line"><span class="comment"># Özet: kaç hata oluştu?  (stdin &lt; + stdout &gt;&gt;)</span></div>
+      <div class="line"><span class="cmd">HATA=$(wc -l &lt; "hatalar_${TARIH}.log")</span></div>
+      <div class="line"><span class="cmd">echo "Tamamlandı. Hata sayısı: $HATA" >> "$LOG"</span></div>
+    </div>
+  </div>
+
+  <div style="margin-top:1.5rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">
+    <div style="background:var(--green-dim);border:1px solid var(--green);border-radius:8px;padding:12px">
+      <div style="font-size:11px;color:var(--green);font-weight:600;margin-bottom:4px">STDIN kullanımı</div>
+      <code style="font-family:var(--font-mono);font-size:12px;color:var(--text)">done &lt; yedeklenecek_dizinler.txt</code>
+    </div>
+    <div style="background:rgba(63,185,80,0.05);border:1px solid #30363d;border-radius:8px;padding:12px">
+      <div style="font-size:11px;color:#3fb950;font-weight:600;margin-bottom:4px">STDOUT kullanımı</div>
+      <code style="font-family:var(--font-mono);font-size:12px;color:var(--text)">echo "..." >> "$LOG"</code>
+    </div>
+    <div style="background:var(--red-dim);border:1px solid var(--red);border-radius:8px;padding:12px">
+      <div style="font-size:11px;color:var(--red);font-weight:600;margin-bottom:4px">STDERR kullanımı</div>
+      <code style="font-family:var(--font-mono);font-size:12px;color:var(--text)">2>> "hatalar_${TARIH}.log"</code>
+    </div>
+  </div>
+
+  <div class="realworld" style="margin-top:1.5rem">
+    <div class="icon">🏢</div>
+    <div class="content"><strong>Bu script nerede çalışır?</strong>Crontab'a eklenerek her gece 02:00'de otomatik çalıştırılır: <span style="font-family:var(--font-mono);color:var(--green)">0 2 * * * /home/user/yedekleme.sh</span></div>
+  </div>
+
+  <button onclick="showSection('summary')" style="background:var(--teal);color:#000;border:none;border-radius:6px;padding:10px 20px;font-family:var(--font-sans);font-size:14px;font-weight:600;cursor:pointer;margin-top:1.5rem;">Devam: Özet & Cheat Sheet →</button>
+</div>
+
+<!-- ====== ÖZET ====== -->
+<div class="section" id="section-summary">
+
+  <div class="progress-bar">
+    <div class="progress-step done"><div class="circle">✓</div> Giriş</div>
+    <div class="progress-arrow">›</div>
+    <div class="progress-step done"><div class="circle">✓</div> Stdout</div>
+    <div class="progress-arrow">›</div>
+    <div class="progress-step done"><div class="circle">✓</div> Stdin</div>
+    <div class="progress-arrow">›</div>
+    <div class="progress-step done"><div class="circle">✓</div> Stderr</div>
+    <div class="progress-arrow">›</div>
+    <div class="progress-step done"><div class="circle">✓</div> Senaryo</div>
+    <div class="progress-arrow">›</div>
+    <div class="progress-step current"><div class="circle">6</div> Özet</div>
+  </div>
+
+  <div class="sec-title"><span class="num">06</span> Özet & Cheat Sheet</div>
+  <p class="sec-desc">Tüm operatörler tek bakışta.</p>
+
+  <div class="cheat-grid">
+    <div class="cheat-item">
+      <code>&gt; dosya</code>
+      <p>Stdout'u dosyaya yaz<br><span style="color:var(--red);font-size:11px">Eski içerik silinir!</span></p>
+    </div>
+    <div class="cheat-item">
+      <code>&gt;&gt; dosya</code>
+      <p>Stdout'u dosyaya ekle<br><span style="color:var(--green);font-size:11px">İçerik korunur,sonuna ekler</span></p>
+    </div>
+    <div class="cheat-item">
+      <code>&lt; dosya</code>
+      <p>Dosyayı stdin olarak oku</p>
+    </div>
+    <div class="cheat-item">
+      <code>&lt;&lt; KELIME</code>
+      <p>Here-document: satır satır oku</p>
+    </div>
+    <div class="cheat-item">
+      <code>2&gt; dosya</code>
+      <p>Stderr'i dosyaya yaz</p>
+    </div>
+    <div class="cheat-item">
+      <code>2&gt;&gt; dosya</code>
+      <p>Stderr'i dosyaya ekle</p>
+    </div>
+    <div class="cheat-item">
+      <code>2&gt;&amp;1</code>
+      <p>Stderr'i stdout'a birleştir</p>
+    </div>
+    <div class="cheat-item">
+      <code>2&gt;/dev/null</code>
+      <p>Hataları yok say / çöpe at</p>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <h3 style="font-size:14px;font-weight:500;margin-bottom:12px">Dosya Tanımlayıcı (File Descriptor) Tablosu</h3>
+  <table class="op-table">
+    <tr><th>FD</th><th>İsim</th><th>Varsayılan</th><th>Yönlendirme</th></tr>
+    <tr>
+      <td><span style="font-family:var(--font-mono);color:var(--amber);font-weight:600">0</span></td>
+      <td style="color:var(--amber)">stdin</td>
+      <td>Klavye</td>
+      <td><span class="op-code">&lt;</span></td>
+    </tr>
+    <tr>
+      <td><span style="font-family:var(--font-mono);color:var(--green);font-weight:600">1</span></td>
+      <td style="color:var(--green)">stdout</td>
+      <td>Terminal</td>
+      <td><span class="op-code">&gt;</span> veya <span class="op-code">&gt;&gt;</span></td>
+    </tr>
+    <tr>
+      <td><span style="font-family:var(--font-mono);color:var(--red);font-weight:600">2</span></td>
+      <td style="color:var(--red)">stderr</td>
+      <td>Terminal</td>
+      <td><span class="op-code">2&gt;</span> veya <span class="op-code">2&gt;&gt;</span></td>
+    </tr>
+  </table>
+
+  <hr class="divider">
+
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.5rem;margin-top:1rem">
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em">Kaynaklar </div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <div style="font-size:13px;color:var(--blue)">Hafta 4:Advanced System Programming / Shell Operators</div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:1.5rem">
+    <button onclick="showSection('intro')" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:10px 20px;font-family:var(--font-sans);font-size:13px;cursor:pointer;">↩ Başa Dön</button>
+    <button onclick="printPage()" style="background:var(--blue);color:#fff;border:none;border-radius:6px;padding:10px 20px;font-family:var(--font-sans);font-size:13px;font-weight:600;cursor:pointer;">🖨 Yazdır / PDF</button>
+  </div>
+
+</div>
+
+</div><!-- end main -->
+
+<script>
+  function showSection(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('section-' + id).classList.add('active');
+    document.getElementById('tab-' + id).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Timer
+  let timerInterval = null;
+  let totalSeconds = 15 * 60;
+  let remaining = totalSeconds;
+
+  function formatTime(s) {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+  }
+
+  function updateTimer() {
+    const disp = document.getElementById('timer-display');
+    const fill = document.getElementById('timer-fill');
+    disp.textContent = formatTime(remaining);
+    const pct = (remaining / totalSeconds) * 100;
+    fill.style.width = pct + '%';
+    if (remaining <= 60) {
+      disp.className = 'timer-display danger';
+      fill.className = 'timer-fill danger';
+    } else if (remaining <= 3 * 60) {
+      disp.className = 'timer-display warning';
+      fill.className = 'timer-fill warning';
+    } else {
+      disp.className = 'timer-display';
+      fill.className = 'timer-fill';
+    }
+    if (remaining <= 0) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    } else {
+      remaining--;
+    }
+  }
+
+  function startTimer() {
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; return; }
+    timerInterval = setInterval(updateTimer, 1000);
+  }
+
+  function resetTimer() {
+    clearInterval(timerInterval);
+    timerInterval = null;
+    remaining = totalSeconds;
+    document.getElementById('timer-display').textContent = formatTime(remaining);
+    document.getElementById('timer-display').className = 'timer-display';
+    document.getElementById('timer-fill').style.width = '100%';
+    document.getElementById('timer-fill').className = 'timer-fill';
+  }
+
+  function printPage() {
+    window.print();
+  }
+</script>
+</body>
+</html>
