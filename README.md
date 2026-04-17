@@ -12,7 +12,7 @@ Bu repo, yüksek lisans dersi kapsamında hazırlanan konu anlatımlarını içe
 * temel komut yapıları
 
 <Dokümana erişmek için>
-`anlatimlar/anlatim-1-shell-operators/shell_operators_ders_dokumani.html`
+https://icloolg.github.io/acik-kaynak-isletim-sistemleri-shell-operators/
 
 Bu çalışma, Linux/Unix shell yapısının temel bileşenlerini ve operatör kullanımını öğretmeyi amaçlamaktadır.
 
