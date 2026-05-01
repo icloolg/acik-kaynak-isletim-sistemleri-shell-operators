@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bash: Dizi · Export · Subshell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f1117;
+  --surface: #161b27;
+  --surface2: #1e2535;
+  --border: #2a3347;
+  --accent: #4f8ef7;
+  --accent2: #38c9a0;
+  --accent3: #f7c948;
+  --accent4: #e26c6c;
+  --text: #e8eaf0;
+  --text2: #8a93a8;
+  --text3: #5a6480;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+  --radius: 10px;
+  --radius-lg: 16px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── HEADER ── */
+header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 1rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.header-left { display: flex; flex-direction: column; gap: 2px; }
+.course-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--accent);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.header-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dot { color: var(--text3); }
+
+/* ── TIMER ── */
+.timer-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.timer-label { font-size: 11px; color: var(--text3); letter-spacing: .06em; text-transform: uppercase; }
+.timer-display {
+  font-family: var(--mono);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--accent3);
+  letter-spacing: .05em;
+}
+.timer-controls { display: flex; gap: 6px; }
+.t-btn {
+  padding: 4px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface2);
+  color: var(--text2);
+  font-size: 12px;
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: all .15s;
+}
+.t-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── META INFO ── */
+.meta-bar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: .6rem 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+.meta-item { font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 5px; }
+.meta-item strong { color: var(--text); }
+
+/* ── NAV PILLS ── */
+.nav-bar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: .75rem 2rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.nav-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text2);
+  font-size: 13px;
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: all .2s;
+  text-decoration: none;
+}
+.nav-pill:hover { border-color: var(--accent); color: var(--accent); }
+.nav-pill.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 500; }
+.nav-pill.done { border-color: var(--accent2); color: var(--accent2); }
+.nav-pill .n {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600;
+}
+.nav-pill.active .n { background: rgba(255,255,255,.25); }
+.nav-pill.done .n { background: var(--accent2); color: #052e1e; }
+.nav-pill .check { font-size: 12px; }
+
+/* ── MAIN ── */
+main {
+  flex: 1;
+  max-width: 860px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+/* ── SECTION HEADER ── */
+.section-num {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  margin-bottom: .4rem;
+}
+.section-title {
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 1.5rem;
+  line-height: 1.2;
+}
+.section-intro {
+  font-size: 15px;
+  color: var(--text2);
+  line-height: 1.7;
+  margin-bottom: 1.5rem;
+}
+
+/* ── FD CARDS (section 1) ── */
+.fd-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 1.5rem 0; }
+.fd-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  text-align: center;
+}
+.fd-num {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text3);
+  margin-bottom: .4rem;
+}
+.fd-name {
+  font-family: var(--mono);
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: .5rem;
+}
+.fd-card:nth-child(1) .fd-name { color: var(--accent3); }
+.fd-card:nth-child(2) .fd-name { color: var(--accent2); }
+.fd-card:nth-child(3) .fd-name { color: var(--accent4); }
+.fd-desc { font-size: 12px; color: var(--text2); line-height: 1.5; }
+
+/* ── INFO BOX ── */
+.info-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  margin: 1rem 0;
+}
+.info-box.warn { border-left-color: var(--accent3); }
+.info-box.success { border-left-color: var(--accent2); }
+.info-box.danger { border-left-color: var(--accent4); }
+.info-box-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text3);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  margin-bottom: .5rem;
+}
+.info-box p { font-size: 14px; color: var(--text2); line-height: 1.6; }
+
+/* ── EXAMPLE CARDS ── */
+.example {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+.example-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .75rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+  transition: background .15s;
+}
+.example-header:hover { background: var(--surface2); }
+.example-header-left { display: flex; align-items: center; gap: .75rem; }
+.diff-badge {
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.diff-easy { background: rgba(56,201,160,.15); color: var(--accent2); border: 1px solid rgba(56,201,160,.3); }
+.diff-mid  { background: rgba(247,201,72,.12); color: var(--accent3); border: 1px solid rgba(247,201,72,.3); }
+.diff-hard { background: rgba(226,108,108,.12); color: var(--accent4); border: 1px solid rgba(226,108,108,.3); }
+.example-title { font-size: 14px; font-weight: 500; color: var(--text); }
+.example-meta { font-size: 12px; color: var(--text3); display: flex; align-items: center; gap: 8px; }
+.chevron { font-size: 14px; color: var(--text3); transition: transform .2s; }
+.example.open .chevron { transform: rotate(90deg); }
+.example-body { display: none; padding: 1.25rem; }
+.example.open .example-body { display: block; }
+
+/* ── TERMINAL ── */
+.term-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #0a0d14;
+  border-radius: var(--radius) var(--radius) 0 0;
+  padding: .5rem 1rem;
+  border: 1px solid #1e2535;
+  border-bottom: none;
+}
+.term-dots { display: flex; gap: 6px; }
+.term-dots span { width: 10px; height: 10px; border-radius: 50%; }
+.term-dots span:nth-child(1) { background: #e26c6c; }
+.term-dots span:nth-child(2) { background: #f7c948; }
+.term-dots span:nth-child(3) { background: #38c9a0; }
+.term-lang { font-size: 11px; color: var(--text3); font-family: var(--mono); }
+.term-body {
+  background: #080b12;
+  border: 1px solid #1e2535;
+  border-radius: 0 0 var(--radius) var(--radius);
+  padding: 1rem 1.25rem;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.8;
+  overflow-x: auto;
+}
+.p  { color: #4ade80; }
+.c  { color: #e8eaf0; }
+.o  { color: #94a3b8; }
+.cm { color: #4a5568; }
+.hl { color: var(--accent3); }
+.err-c { color: var(--accent4); }
+
+/* ── RUN BTN ── */
+.run-wrap { display: flex; justify-content: flex-end; margin-top: .75rem; }
+.run-btn {
+  padding: 6px 16px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface2);
+  color: var(--text2);
+  font-size: 12px;
+  font-family: var(--sans);
+  cursor: pointer;
+  transition: all .15s;
+  display: flex; align-items: center; gap: 6px;
+}
+.run-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+.sim-out {
+  display: none;
+  margin-top: .75rem;
+  background: #06080e;
+  border: 1px solid #1e2535;
+  border-radius: var(--radius);
+  padding: .75rem 1rem;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.7;
+  color: #4ade80;
+}
+.sim-out.show { display: block; }
+
+/* ── COMPARISON TABLE ── */
+.cmp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin: 1rem 0;
+}
+.cmp-table th {
+  background: var(--surface2);
+  color: var(--text2);
+  font-weight: 500;
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  letter-spacing: .04em;
+}
+.cmp-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--mono);
+}
+.cmp-table tr:last-child td { border-bottom: none; }
+.cmp-table td:first-child { color: var(--accent); }
+.cmp-table td.yes { color: var(--accent2); }
+.cmp-table td.no  { color: var(--accent4); }
+
+/* ── SECTION DIVIDER ── */
+.divider { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+
+/* ── NEXT BTN ── */
+.next-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 2rem;
+}
+.next-btn {
+  padding: 10px 24px;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--accent);
+  font-size: 14px;
+  font-family: var(--sans);
+  cursor: pointer;
+  transition: all .15s;
+  display: flex; align-items: center; gap: 6px;
+}
+.next-btn:hover { background: var(--accent); color: #fff; }
+
+/* ── QUIZ ── */
+.quiz-q { font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 1rem; line-height: 1.5; }
+.quiz-counter { font-size: 12px; color: var(--text3); margin-bottom: .5rem; }
+.quiz-opts { display: flex; flex-direction: column; gap: 8px; }
+.qopt {
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface2);
+  color: var(--text);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: all .15s;
+}
+.qopt:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.qopt.correct { background: rgba(56,201,160,.1); border-color: var(--accent2); color: var(--accent2); }
+.qopt.wrong   { background: rgba(226,108,108,.1); border-color: var(--accent4); color: var(--accent4); }
+.qopt:disabled { cursor: default; }
+.q-feedback {
+  margin-top: .75rem;
+  padding: .75rem 1rem;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  display: none;
+}
+.q-feedback.ok  { background: rgba(56,201,160,.08); border: 1px solid rgba(56,201,160,.25); color: #7ee8c8; display: block; }
+.q-feedback.no  { background: rgba(226,108,108,.08); border: 1px solid rgba(226,108,108,.25); color: #f0a0a0; display: block; }
+.quiz-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; }
+.q-nav-btn {
+  padding: 8px 18px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface2);
+  color: var(--text2);
+  font-size: 13px;
+  font-family: var(--sans);
+  cursor: pointer;
+  transition: all .15s;
+}
+.q-nav-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.q-nav-btn:disabled { opacity: .35; cursor: default; }
+.score-txt { font-size: 13px; color: var(--text3); }
+.progress-bar-wrap {
+  height: 3px;
+  background: var(--border);
+  border-radius: 99px;
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+}
+.progress-bar {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 99px;
+  transition: width .3s;
+}
+
+/* ── SUMMARY GRID ── */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: .75rem;
+  margin: 1.5rem 0;
+}
+.sum-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+.sum-code {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--accent);
+  margin-bottom: .5rem;
+  display: block;
+}
+.sum-desc { font-size: 12px; color: var(--text2); line-height: 1.5; }
+.sum-card.warn .sum-code { color: var(--accent4); }
+.sum-card.tip .sum-code  { color: var(--accent2); }
+
+/* ── FOOTER ── */
+footer {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 1.25rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: .75rem;
+}
+.footer-info { font-size: 12px; color: var(--text3); }
+.footer-actions { display: flex; gap: 8px; }
+.foot-btn {
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text2);
+  font-size: 12px;
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: all .15s;
+  text-decoration: none;
+}
+.foot-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* HIDDEN SECTIONS */
+.sec { display: none; }
+.sec.active { display: block; }
+
+@media (max-width: 600px) {
+  .fd-grid { grid-template-columns: 1fr; }
+  .meta-bar { gap: .75rem; }
+  header { padding: .75rem 1rem; }
+  main { padding: 1.25rem 1rem 3rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-left">
+    <span class="course-label">Açık Kaynak Kodlu İşletim Sistemleri ve Programlama</span>
+    <div class="header-title">
+      Temel Kabuk Programlama
+      <span class="dot">·</span>
+      <span style="color:var(--text2);font-weight:400">Dizi · Export · Subshell</span>
+    </div>
+  </div>
+  <div class="timer-box">
+    <span class="timer-label">Süre</span>
+    <div class="timer-display" id="timerDisplay">15:00</div>
+    <div class="timer-controls">
+      <button class="t-btn" id="timerStartBtn" onclick="toggleTimer()">▶ Başlat</button>
+      <button class="t-btn" onclick="resetTimer()">↺ Sıfırla</button>
+    </div>
+  </div>
+</header>
+
+<!-- META BAR -->
+<div class="meta-bar">
+  <div class="meta-item">🖥 <strong>Bölüm 8</strong> Basic Shell Scripting</div>
+  <div class="meta-item">⏱ <strong>10–15 dakika</strong></div>
+  <div class="meta-item">📚 <strong>6 bölüm</strong> · 6 soru</div>
+</div>
+
+<!-- NAV BAR -->
+<nav class="nav-bar" id="navBar">
+  <button class="nav-pill active" onclick="goto(0)" id="pill0"><span class="n">1</span>Giriş</button>
+  <button class="nav-pill" onclick="goto(1)" id="pill1"><span class="n">2</span>Dizi Temelleri</button>
+  <button class="nav-pill" onclick="goto(2)" id="pill2"><span class="n">3</span>Dizi İşlemleri</button>
+  <button class="nav-pill" onclick="goto(3)" id="pill3"><span class="n">4</span>Export</button>
+  <button class="nav-pill" onclick="goto(4)" id="pill4"><span class="n">4</span>( ) vs { }</button>
+  <button class="nav-pill" onclick="goto(5)" id="pill5"><span class="n">6</span>Özet & Sınav</button>
+</nav>
+
+<main>
+
+<!-- ═══════════════════════════════════
+     SECTION 0 — GİRİŞ
+═══════════════════════════════════ -->
+<div class="sec active" id="sec0">
+  <div class="section-num">01 Giriş</div>
+  <h1 class="section-title">Bash'in Güçlü Yapı Taşları</h1>
+  <p class="section-intro">
+    Bu derste üç önemli konuyu ele alacağız: <strong>Dizi Değişkenleri</strong> (tek isim altında birden fazla değer saklamak), <strong>export</strong> (değişkenleri alt süreçlere kalıtmak) ve <strong>( ) / { } yapıları</strong> (komutları gruplayarak çalıştırmak).
+  </p>
+
+  <div class="fd-grid">
+    <div class="fd-card">
+      <div class="fd-num">KONU 1</div>
+      <div class="fd-name">Diziler</div>
+      <div class="fd-desc">Birden fazla değeri tek değişkende sakla. İndeks ile eriş.</div>
+    </div>
+    <div class="fd-card">
+      <div class="fd-num">KONU 2</div>
+      <div class="fd-name">export</div>
+      <div class="fd-desc">Değişkeni child process'e taşı. Kalıtım zinciri oluştur.</div>
+    </div>
+    <div class="fd-card">
+      <div class="fd-num">KONU 3</div>
+      <div class="fd-name">( ) { }</div>
+      <div class="fd-desc">Alt kabuk mu, mevcut kabuk mu? Gruplama farkını anla.</div>
+    </div>
+  </div>
+
+  <div class="info-box">
+    <div class="info-box-title">🎙 Ön Koşul</div>
+    <p>Temel değişken atama (<code style="color:var(--accent)">x=10</code>), echo ve komut satırı kullanımını bildiğiniz varsayılmaktadır.</p>
+  </div>
+
+  <div class="next-row">
+    <button class="next-btn" onclick="goto(1)">Devam: Dizi Temelleri →</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     SECTION 1 — DİZİ TEMELLERİ
+═══════════════════════════════════ -->
+<div class="sec" id="sec1">
+  <div class="section-num">02 Dizi Değişkenleri</div>
+  <h1 class="section-title">Dizi Tanımlama ve İndeks Erişimi</h1>
+  <p class="section-intro">
+    Dizi, tek bir değişken adı altında birden fazla değer saklayan yapıdır. Bash'te dizi boyutu önceden belirtilmez; dinamik olarak büyür. Elemanlar <strong>0'dan</strong> başlayan indeksle erişilir.
+  </p>
+
+  <div class="info-box warn">
+    <div class="info-box-title">💡 Temel Kural</div>
+    <p><code style="color:var(--accent3)">$dizi</code> yazmak <code style="color:var(--accent3)">${dizi[0]}</code> ile aynıdır — yani her zaman ilk elemanı döner!</p>
+  </div>
+
+  <!-- EXAMPLE 1 -->
+  <div class="example open" id="ex1">
+    <div class="example-header" onclick="toggleEx('ex1')">
+      <div class="example-header-left">
+        <span class="diff-badge diff-easy">Basit</span>
+        <span class="example-title">Dizi tanımla ve elemanlara eriş</span>
+      </div>
+      <div class="example-meta">~1 dk <span class="chevron">›</span></div>
+    </div>
+    <div class="example-body">
+      <p style="font-size:14px;color:var(--text2);margin-bottom:.75rem"><code style="color:var(--accent)">declare -a</code> ile dizi oluşturulur, parantez içinde boşlukla ayrılmış değerler atanır.</p>
+      <div class="term-header"><div class="term-dots"><span></span><span></span><span></span></div><span class="term-lang">bash</span></div>
+      <div class="term-body">
+<span class="p">$&gt; </span><span class="c">declare -a spor</span><br>
+<span class="p">$&gt; </span><span class="c">spor=(basketbol futbol tenis)</span><br>
+<span class="p">$&gt; </span><span class="c">spor[3]=hokey</span>   <span class="cm"># 4. pozisyon (index 3)</span><br><br>
+<span class="p">$&gt; </span><span class="c">echo ${spor[0]}</span><br>
+<span class="o">basketbol</span><br>
+<span class="p">$&gt; </span><span class="c">echo ${spor[3]}</span><br>
+<span class="o">hokey</span><br>
+<span class="p">$&gt; </span><span class="c">echo $spor</span>   <span class="cm"># = ${spor[0]}</span><br>
+<span class="o">basketbol</span>
+      </div>
+      <p style="font-size:13px;color:var(--text2);margin-top:.75rem">
+        İlk satırda <code style="color:var(--accent)">declare -a</code> ile dizi tanımlandı. Parantez içi toplu atama yapıldı. <code style="color:var(--accent)">spor[3]=hokey</code> ile 4. pozisyona yeni değer eklendi.
+      </p>
+      <div class="run-wrap"><button class="run-btn" onclick="simRun('sim1')">▶ Simüle et</button></div>
+      <div class="sim-out" id="sim1">$ declare -a spor<br>$ spor=(basketbol futbol tenis)<br>$ spor[3]=hokey<br>$ echo ${spor[0]}  → basketbol<br>$ echo ${spor[3]}  → hokey<br>$ echo $spor       → basketbol  ← sadece ilk eleman!</div>
+    </div>
+  </div>
+
+  <!-- EXAMPLE 2 -->
+  <div class="example" id="ex2">
+    <div class="example-header" onclick="toggleEx('ex2')">
+      <div class="example-header-left">
+        <span class="diff-badge diff-mid">Orta</span>
+        <span class="example-title">Var olan diziden yeni dizi oluştur</span>
+      </div>
+      <div class="example-meta">~2 dk <span class="chevron">›</span></div>
+    </div>
+    <div class="example-body">
+      <p style="font-size:14px;color:var(--text2);margin-bottom:.75rem">Bir dizinin içeriğini <code style="color:var(--accent)">$dizi</code> ile yeni diziye ekleyebilirsiniz. Ancak <code style="color:var(--accent)">$dizi</code> yalnızca ilk elemanı döndürdüğünden, tüm elemanlar için <code style="color:var(--accent)">${dizi[@]}</code> kullanın.</p>
+      <div class="term-header"><div class="term-dots"><span></span><span></span><span></span></div><span class="term-lang">bash</span></div>
+      <div class="term-body">
+<span class="p">$&gt; </span><span class="c">spor=(basketbol futbol)</span><br>
+<span class="p">$&gt; </span><span class="c">ekstra=($spor tenis)</span>    <span class="cm"># $spor → sadece basketbol</span><br>
+<span class="p">$&gt; </span><span class="c">echo ${ekstra[*]}</span><br>
+<span class="o">basketbol tenis</span>           <span class="cm"># futbol kayboldu!</span><br><br>
+<span class="p">$&gt; </span><span class="c">dogru=(${spor[@]} tenis)</span>  <span class="cm"># [@] tüm elemanları alır</span><br>
+<span class="p">$&gt; </span><span class="c">echo ${dogru[*]}</span><br>
+<span class="o">basketbol futbol tenis</span>    <span class="cm"># doğru sonuç</span>
+      </div>
+      <div class="info-box warn" style="margin-top:.75rem">
+        <div class="info-box-title">⚠️ Dikkat</div>
+        <p>Slayttaki <code style="color:var(--accent3)">moresports=($sports tennis)</code> örneğinde futbol kaybolur çünkü <code style="color:var(--accent3)">$sports</code> yalnızca ilk elemanı döndürür. Tüm elemanlar için <code style="color:var(--accent3)">${sports[@]}</code> kullanın.</p>
+      </div>
+      <div class="run-wrap"><button class="run-btn" onclick="simRun('sim2')">▶ Simüle et</button></div>
+      <div class="sim-out" id="sim2">$ spor=(basketbol futbol)<br>$ ekstra=($spor tenis)<br>$ echo ${ekstra[*]}    → basketbol tenis   ← futbol kayboldu!<br><br>$ dogru=(${spor[@]} tenis)<br>$ echo ${dogru[*]}    → basketbol futbol tenis ✓</div>
+    </div>
+  </div>
+
+  <!-- EXAMPLE 3 -->
+  <div class="example" id="ex3">
+    <div class="example-header" onclick="toggleEx('ex3')">
+      <div class="example-header-left">
+        <span class="diff-badge diff-hard">Zor</span>
+        <span class="example-title">Döngüyle dizi elemanlarını işle</span>
+      </div>
+      <div class="example-meta">~3 dk <span class="chevron">›</span></div>
+    </div>
+    <div class="example-body">
+      <p style="font-size:14px;color:var(--text2);margin-bottom:.75rem">Gerçek uygulamalarda diziler döngüyle işlenir. Aşağıdaki script not ortalaması hesaplar.</p>
+      <div class="term-header"><div class="term-dots"><span></span><span></span><span></span></div><span class="term-lang">bash</span></div>
+      <div class="term-body">
+<span class="p">$&gt; </span><span class="c">declare -a notlar=(85 90 72 95 88)</span><br>
+<span class="p">$&gt; </span><span class="c">toplam=0</span><br>
+<span class="p">$&gt; </span><span class="c">for not in ${notlar[@]}; do</span><br>
+<span class="p">&gt;  </span><span class="c">  toplam=$((toplam + not))</span><br>
+<span class="p">&gt;  </span><span class="c">done</span><br>
+<span class="p">$&gt; </span><span class="c">sayi=${#notlar[@]}</span><br>
+<span class="p">$&gt; </span><span class="c">echo "Ortalama: $((toplam / sayi))"</span><br>
+<span class="o">Ortalama: 86</span><br><br>
+<span class="p">$&gt; </span><span class="c">echo "Eleman sayısı: ${#notlar[@]}"</span><br>
+<span class="o">Eleman sayısı: 5</span>
+      </div>
+      <p style="font-size:13px;color:var(--text2);margin-top:.75rem">
+        <code style="color:var(--accent)">${notlar[@]}</code> tüm elemanları döner. <code style="color:var(--accent)">${#notlar[@]}</code> eleman sayısını (5) verir.
+      </p>
+      <div class="info-box success" style="margin-top:.75rem">
+        <div class="info-box-title">🌐 Gerçek Hayat: Not Sistemleri</div>
+        <p>Üniversite otomasyon sistemleri, sınav notlarını dizide toplayıp ortalamasını hesaplamak için bu yapıyı kullanır. Apache log analizi, sunucu IP listesi işleme gibi görevler de aynı kalıba dayanır.</p>
+      </div>
+      <div class="run-wrap"><button class="run-btn" onclick="simRun('sim3')">▶ Simüle et</button></div>
+      <div class="sim-out" id="sim3">$ declare -a notlar=(85 90 72 95 88)<br>$ for not in ${notlar[@]}; do<br>&gt;   toplam=$((toplam + not))<br>&gt; done<br>$ echo "Ortalama: $((toplam / sayi))"<br>Ortalama: 86<br>$ echo "Eleman sayısı: ${#notlar[@]}"<br>Eleman sayısı: 5</div>
+    </div>
+  </div>
+
+  <div class="next-row">
+    <button class="next-btn" onclick="goto(2)">Devam: Dizi İşlemleri →</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     SECTION 2 — DİZİ İŞLEMLERİ
+═══════════════════════════════════ -->
+<div class="sec" id="sec2">
+  <div class="section-num">03 Dizi İşlemleri</div>
+  <h1 class="section-title">Tüm Dizi, Eleman Sayısı ve İpuçları</h1>
+  <p class="section-intro">
+    Dizi sözdiziminin kritik sembollerini ezberlemek yerine anlamlarını kavramak önemlidir.
+  </p>
+
+  <table class="cmp-table">
+    <tr><th>Sözdizim</th><th>Ne döner?</th><th>Örnek çıktı</th></tr>
+    <tr><td>${a[0]}</td><td style="color:var(--text2);font-family:var(--sans)">İlk eleman</td><td style="color:var(--text2);font-family:var(--sans)">basketbol</td></tr>
+    <tr><td>$a</td><td style="color:var(--text2);font-family:var(--sans)">İlk eleman (= ${a[0]})</td><td style="color:var(--text2);font-family:var(--sans)">basketbol</td></tr>
+    <tr><td>${a[3]}</td><td style="color:var(--text2);font-family:var(--sans)">4. indeks elemanı</td><td style="color:var(--text2);font-family:var(--sans)">hokey</td></tr>
+    <tr><td>${a[@]}</td><td style="color:var(--text2);font-family:var(--sans)">Tüm elemanlar (her biri ayrı)</td><td style="color:var(--text2);font-family:var(--sans)">basketbol futbol tenis hokey</td></tr>
+    <tr><td>${a[*]}</td><td style="color:var(--text2);font-family:var(--sans)">Tüm elemanlar (tek string)</td><td style="color:var(--text2);font-family:var(--sans)">basketbol futbol tenis hokey</td></tr>
+    <tr><td>${#a[*]}</td><td style="color:var(--text2);font-family:var(--sans)">Eleman sayısı</td><td style="color:var(--text2);font-family:var(--sans)">4</td></tr>
+  </table>
+
+  <div class="example open" id="ex4">
+    <div class="example-header" onclick="toggleEx('ex4')">
+      <div class="example-header-left">
+        <span class="diff-badge diff-easy">Basit</span>
+        <span class="example-title">${array[@]} ve ${#array[*]} kullanımı</span>
+      </div>
+      <div class="example-meta">~1 dk <span class="chevron">›</span></div>
+    </div>
+    <div class="example-body">
+      <div class="term-header"><div class="term-dots"><span></span><span></span><span></span></div><span class="term-lang">bash</span></div>
+      <div class="term-body">
+<span class="p">$&gt; </span><span class="c">spor=(basketbol futbol tenis hokey)</span><br>
+<span class="p">$&gt; </span><span class="c">echo ${spor[@]}</span><br>
+<span class="o">basketbol futbol tenis hokey</span>     <span class="cm"># tüm elemanlar</span><br>
+<span class="p">$&gt; </span><span class="c">echo ${#spor[*]}</span><br>
+<span class="o">4</span>                                  <span class="cm"># eleman sayısı</span><br>
+<span class="p">$&gt; </span><span class="c">echo ${spor[*]:1:2}</span>               <span class="cm"># dilim: index 1'den 2 tane</span><br>
+<span class="o">futbol tenis</span>
+      </div>
+      <div class="run-wrap"><button class="run-btn" onclick="simRun('sim4')">▶ Simüle et</button></div>
+      <div class="sim-out" id="sim4">$ spor=(basketbol futbol tenis hokey)<br>$ echo ${spor[@]}       → basketbol futbol tenis hokey<br>$ echo ${#spor[*]}      → 4<br>$ echo ${spor[*]:1:2}   → futbol tenis</div>
+    </div>
+  </div>
+
+  <div class="example" id="ex5">
+    <div class="example-header" onclick="toggleEx('ex5')">
+      <div class="example-header-left">
+        <span class="diff-badge diff-hard">Zor</span>
+        <span class="example-title">Gerçek dünya: Sunucu listesi yönetimi</span>
+      </div>
+      <div class="example-meta">~3 dk <span class="chevron">›</span></div>
+    </div>
+    <div class="example-body">
+      <p style="font-size:14px;color:var(--text2);margin-bottom:.75rem">Sistem yöneticileri sunucu adreslerini dizi olarak saklar ve döngüyle ping atar.</p>
+      <div class="term-header"><div class="term-dots"><span></span><span></span><span></span></div><span class="term-lang">bash</span></div>
+      <div class="term-body">
+<span class="p">$&gt; </span><span class="c">declare -a sunucular=("192.168.1.1" "192.168.1.2" "192.168.1.3")</span><br>
+<span class="p">$&gt; </span><span class="c">echo "Toplam sunucu: ${#sunucular[@]}"</span><br>
+<span class="o">Toplam sunucu: 3</span><br><br>
+<span class="p">$&gt; </span><span class="c">for ip in "${sunucular[@]}"; do</span><br>
+<span class="p">&gt;  </span><span class="c">  ping -c1 "$ip" &gt;/dev/null 2&gt;&1</span><br>
+<span class="p">&gt;  </span><span class="c">  if [ $? -eq 0 ]; then</span><br>
+<span class="p">&gt;  </span><span class="c">    echo "$ip: ✓ çalışıyor"</span><br>
+<span class="p">&gt;  </span><span class="c">  else</span><br>
+<span class="p">&gt;  </span><span class="c">    echo "$ip: ✗ erişilemiyor"</span><br>
+<span class="p">&gt;  </span><span class="c">  fi</span><br>
+<span class="p">$&gt; </span><span class="c">done</span><br>
+<span class="o">192.168.1.1: ✓ çalışıyor</span><br>
+<span class="o">192.168.1.2: ✓ çalışıyor</span><br>
+<span class="err-c">192.168.1.3: ✗ erişilemiyor</span>
+      </div>
+      <div class="info-box success" style="margin-top:.75rem">
+        <div class="info-box-title">🌐 Gerçek Hayat: DevOps & Ağ Yönetimi</div>
+        <p>Nagios, Zabbix gibi izleme araçlarının temelinde bu tür dizi+döngü yapıları yatar. Her sunucuya otomatik komut göndermek için Ansible de benzer mantık kullanır.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="next-row">
+    <button class="next-btn" onclick="goto(3)">Devam: Export Değişkenleri →</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     SECTION 3 — EXPORT
+═══════════════════════════════════ -->
+<div class="sec" id="sec3">
+  <div class="section-num">04 Export Değişkenleri</div>
+  <h1 class="section-title">Değişkenleri Alt Süreçlere Kalıtmak</h1>
+  <p class="section-intro">
+    Bash'te tanımlanan değişkenler yalnızca o kabuğa aittir. Bir alt süreç (child process) çalıştırdığınızda, bu değişkenleri göremez. <code style="color:var(--accent)">export</code> komutu değişkeni "ortam değişkeni" haline getirir ve alt süreçlere kalıtır.
+  </p>
+
+  <div class="info-box">
+    <div class="info-box-title">🎙 Günlük Hayat Örneği</div>
+    <p>Düşünün: Bir şirketin genel müdürü (parent shell) bilgileri çalışanlarla (child process) paylaşmak istiyor. Export olmadan bilgi paylaşılmaz; export ile bilgi kalıtılır.</p>
+  </div>
+
+  <div class="example open" id="ex6">
+    <div class="example-header" onclick="toggleEx('ex6')">
+      <div class="example-header-left">
+        <span class="diff-badge diff-easy">Basit</span>
+        <span class="example-title">Export öncesi ve sonrası farkı</span>
+      </div>
+      <div class="example-meta">~1 dk <span class="chevron">›</span></div>
+    </div>
+    <div class="example-body">
+      <p style="font-size:14px;color:var(--text2);margin-bottom:.75rem">Slayttaki <code style="color:var(--accent)">vartest</code> script örneğini inceleyelim. Script iki değişkeni ekrana yazdırır.</p>
+      <div class="term-header"><div class="term-dots"><span></span><span></span><span></span></div><span class="term-lang">bash  (vartest içeriği)</span></div>
+      <div class="term-body">
+<span class="cm">#!/bin/bash</span><br>
+<span class="c">echo "x = $x"</span><br>
+<span class="c">echo "y = $y"</span>
+      </div>
+      <div style="height:.75rem"></div>
+      <div class="term-header"><div class="term-dots"><span></span><span></span><span></span></div><span class="term-lang">bash  (terminal)</span></div>
+      <div class="term-body">
+<span class="p">$&gt; </span><span class="c">x=100 ; y=10</span><br>
+<span class="p">$&gt; </span><span class="c">./vartest</span><br>
+<span class="err-c">x =      </span><span class="cm">← boş! export edilmedi</span><br>
+<span class="err-c">y =      </span><span class="cm">← boş! export edilmedi</span><br><br>
+<span class="p">$&gt; </span><span class="c">export y</span><br>
+<span class="p">$&gt; </span><span class="c">./vartest</span><br>
+<span class="err-c">x =      </span><span class="cm">← hâlâ boş, export edilmedi</span><br>
+<span class="o">y = 10   </span><span class="cm">← artık görünür!</span>
+      </div>
+      <p style="font-size:13px;color:var(--text2);margin-top:.75rem">
+        Yalnızca <code style="color:var(--accent)">y</code> export edildi. Bu yüzden vartest scripti <code style="color:var(--accent)">y</code>'yi görebiliyor, <code style="color:var(--accent)">x</code>'i göremiyorum.
+      </p>
+      <div class="run-wrap"><button class="run-btn" onclick="simRun('sim6')">▶ Simüle et</button></div>
+      <div class="sim-out" id="sim6">=== Export öncesi ===<br>$ x=100 ; y=10<br>$ ./vartest<br>x =        ← boş!<br>y =        ← boş!<br><br>=== export y sonrası ===<br>$ export y<br>$ ./vartest<br>x =        ← hâlâ boş<br>y = 10     ← görünür ✓</div>
+    </div>
+  </div>
+
+  <div class="example" id="ex7">
+    <div class="example-header" onclick="toggleEx('ex7')">
+      <div class="example-header-left">
+        <span class="diff-badge diff-mid">Orta</span>
+        <span class="example-title">declare -x ile export ve export -p listesi</span>
+      </div>
+      <div class="example-meta">~2 dk <span class="chevron">›</span></div>
+    </div>
+    <div class="example-body">
+      <div class="term-header"><div class="term-dots"><span></span><span></span><span></span></div><span class="term-lang">bash</span></div>
+      <div class="term-body">
+<span class="cm"># export ve declare -x aynı işlevi görür</span><br>
+<span class="p">$&gt; </span><span class="c">export y</span>            <span class="cm"># yöntem 1</span><br>
+<span class="p">$&gt; </span><span class="c">declare -x y</span>        <span class="cm"># yöntem 2 — aynı sonuç</span><br><br>
+<span class="cm"># Mevcut export edilmiş değişkenleri listele</span><br>
+<span class="p">$&gt; </span><span class="c">export -p</span><br>
+<span class="o">declare -x HOME="/home/kullanici"</span><br>
+<span class="o">declare -x PATH="/usr/local/bin:/usr/bin:/bin"</span><br>
+<span class="o">declare -x y="10"</span><br>
+<span class="cm"># x burada görünmez — export edilmedi</span>
+      </div>
+      <div class="run-wrap"><button class="run-btn" onclick="simRun('sim7')">▶ Simüle et</button></div>
+      <div class="sim-out" id="sim7">$ export y<br>$ declare -x y     ← ikisi de aynı<br><br>$ export -p<br>declare -x HOME="/home/kullanici"<br>declare -x PATH="/usr/local/bin:/usr/bin:/bin"<br>declare -x y="10"<br># x görünmüyor → export edilmedi</div>
+    </div>
+  </div>
+
+  <div class="example" id="ex8">
+    <div class="example-header" onclick="toggleEx('ex8')">
+      <div class="example-header-left">
+        <span class="diff-badge diff-hard">Zor</span>
+        <span class="example-title">Ortam değişkeni olarak veritabanı bağlantısı</span>
+      </div>
+      <div class="example-meta">~3 dk <span class="chevron">›</span></div>
+    </div>
+    <div class="example-body">
+      <p style="font-size:14px;color:var(--text2);margin-bottom:.75rem">Gerçek uygulamalarda şifreler ve API anahtarları export ile alt süreçlere aktarılır.</p>
+      <div class="term-header"><div class="term-dots"><span></span><span></span><span></span></div><span class="term-lang">bash</span></div>
+      <div class="term-body">
+<span class="cm"># .bashrc veya .bash_profile içinde</span><br>
+<span class="c">export DB_HOST="localhost"</span><br>
+<span class="c">export DB_USER="admin"</span><br>
+<span class="c">export DB_PASS="gizli_sifre"</span><br>
+<span class="c">export DB_NAME="uygulama_db"</span><br><br>
+<span class="cm"># Uygulama bu değişkenleri otomatik okur</span><br>
+<span class="p">$&gt; </span><span class="c">./python_uygulama.py</span>  <span class="cm"># os.environ["DB_HOST"] ile erişir</span><br>
+<span class="o">Veritabanına bağlandı: localhost/uygulama_db</span>
+      </div>
+      <div class="info-box success" style="margin-top:.75rem">
+        <div class="info-box-title">🌐 Gerçek Hayat: Docker & CI/CD</div>
+        <p>Docker'da <code style="color:var(--accent)">ENV</code> komutu, GitHub Actions'da <code style="color:var(--accent)">env:</code> bloğu aynı mantığı kullanır. Şifreler kaynak koda gömülmez; export ile ortam değişkeni olarak aktarılır.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="next-row">
+    <button class="next-btn" onclick="goto(4)">Devam: ( ) ve { } Yapıları →</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     SECTION 4 — CONSTRUCTS
+═══════════════════════════════════ -->
+<div class="sec" id="sec4">
+  <div class="section-num">05 ( ) ve { } Yapıları</div>
+  <h1 class="section-title">Subshell mi, Mevcut Kabuk mu?</h1>
+  <p class="section-intro">
+    Bash'te komutları gruplamak için iki yöntem vardır. Fark tek ama kritik: komutlar <strong>nerede</strong> çalışıyor?
+  </p>
+
+  <table class="cmp-table">
+    <tr><th>Özellik</th><th>( ) — Alt Kabuk</th><th>{ } — Mevcut Kabuk</th></tr>
+    <tr><td>Çalıştığı yer</td><td class="no">Yeni bir subshell</td><td class="yes">Mevcut shell</td></tr>
+    <tr><td>cd kalıcı mı?</td><td class="no">Hayır</td><td class="yes">Evet</td></tr>
+    <tr><td>Değişken sızar mı?</td><td class="no">Hayır</td><td class="yes">Evet</td></tr>
+    <tr><td>Arka plan (&)</td><td class="yes">Evet</td><td class="yes">Evet</td></tr>
+    <tr><td>I/O yönlendirme</td><td class="yes">Evet</td><td class="yes">Evet</td></tr>
+    <tr><td>Sözdizim notu</td><td style="color:var(--text2);font-family:var(--sans)">Normal boşluk</td><td style="color:var(--text2);font-family:var(--sans)">Son emir sonrası ; veya newline zorunlu</td></tr>
+  </table>
+
+  <div class="example open" id="ex9">
+    <div class="example-header" onclick="toggleEx('ex9')">
+      <div class="example-header-left">
+        <span class="diff-badge diff-easy">Basit</span>
+        <span class="example-title">Değişken farkı: ( ) vs { }</span>
+      </div>
+      <div class="example-meta">~1 dk <span class="chevron">›</span></div>
+    </div>
+    <div class="example-body">
+      <div class="term-header"><div class="term-dots"><span></span><span></span><span></span></div><span class="term-lang">bash</span></div>
+      <div class="term-body">
+<span class="cm"># ( ) → alt kabuk, x=100 dışarıya sızmaz</span><br>
+<span class="p">$&gt; </span><span class="c">x=50; (x=100); echo $x</span><br>
+<span class="o">50</span>   <span class="cm">← değişmedi!</span><br><br>
+<span class="cm"># { } → mevcut kabuk, x=100 kalıcı olur</span><br>
+<span class="p">$&gt; </span><span class="c">x=50; { x=100; }; echo $x</span><br>
+<span class="o">100</span>  <span class="cm">← değişti!</span>
+      </div>
+      <div class="run-wrap"><button class="run-btn" onclick="simRun('sim9')">▶ Simüle et</button></div>
+      <div class="sim-out" id="sim9">--- Parantez (subshell) ---<br>$ x=50; (x=100); echo $x<br>50   ← alt kabuk dışarıya sızmaz<br><br>--- Süslü parantez (current shell) ---<br>$ x=50; { x=100; }; echo $x<br>100  ← mevcut kabukta kalıcı</div>
+    </div>
+  </div>
+
+  <div class="example" id="ex10">
+    <div class="example-header" onclick="toggleEx('ex10')">
+      <div class="example-header-left">
+        <span class="diff-badge diff-mid">Orta</span>
+        <span class="example-title">cd ve arka plan çalıştırma</span>
+      </div>
+      <div class="example-meta">~2 dk <span class="chevron">›</span></div>
+    </div>
+    <div class="example-body">
+      <div class="term-header"><div class="term-dots"><span></span><span></span><span></span></div><span class="term-lang">bash</span></div>
+      <div class="term-body">
+<span class="cm"># ( ) → dizin değişmez</span><br>
+<span class="p">$&gt; </span><span class="c">( cd /tmp; ls; )</span><br>
+<span class="o">dosya1.txt  dosya2.log</span><br>
+<span class="p">$&gt; </span><span class="c">pwd</span><br>
+<span class="o">/home/kullanici</span>   <span class="cm">← hâlâ aynı dizin!</span><br><br>
+<span class="cm"># { } → dizin değişir</span><br>
+<span class="p">$&gt; </span><span class="c">{ cd /tmp; ls; }</span><br>
+<span class="o">dosya1.txt  dosya2.log</span><br>
+<span class="p">$&gt; </span><span class="c">pwd</span><br>
+<span class="o">/tmp</span>   <span class="cm">← dizin değişti!</span><br><br>
+<span class="cm"># Arka planda çalıştırma + hata yönlendirme</span><br>
+<span class="p">$&gt; </span><span class="c">(prog1; prog2; prog3) 2>hata.txt &</span><br>
+<span class="o">[1] 12345</span>   <span class="cm">← arka plan process ID</span>
+      </div>
+      <div class="run-wrap"><button class="run-btn" onclick="simRun('sim10')">▶ Simüle et</button></div>
+      <div class="sim-out" id="sim10">--- ( ) ile cd ---<br>$ ( cd /tmp; ls; )<br>dosya1.txt  dosya2.log<br>$ pwd<br>/home/kullanici  ← değişmedi<br><br>--- { } ile cd ---<br>$ { cd /tmp; ls; }<br>dosya1.txt  dosya2.log<br>$ pwd<br>/tmp  ← değişti!</div>
+    </div>
+  </div>
+
+  <div class="example" id="ex11">
+    <div class="example-header" onclick="toggleEx('ex11')">
+      <div class="example-header-left">
+        <span class="diff-badge diff-hard">Zor</span>
+        <span class="example-title">Paralel işlem ve hata yönetimi</span>
+      </div>
+      <div class="example-meta">~3 dk <span class="chevron">›</span></div>
+    </div>
+    <div class="example-body">
+      <p style="font-size:14px;color:var(--text2);margin-bottom:.75rem">Birden fazla işlemi paralel çalıştırmak ve çıktılarını birleştirmek için ( ) yapısı kullanılır.</p>
+      <div class="term-header"><div class="term-dots"><span></span><span></span><span></span></div><span class="term-lang">bash</span></div>
+      <div class="term-body">
+<span class="cm"># Üç dizini paralel tara, tüm çıktıyı tek dosyaya</span><br>
+<span class="p">$&gt; </span><span class="c">(</span><br>
+<span class="p">&gt;  </span><span class="c">  find /home -name "*.log" 2>/dev/null</span><br>
+<span class="p">&gt;  </span><span class="c">  find /var  -name "*.log" 2>/dev/null</span><br>
+<span class="p">&gt;  </span><span class="c">  find /tmp  -name "*.log" 2>/dev/null</span><br>
+<span class="p">&gt;  </span><span class="c">) > tum_loglar.txt</span><br><br>
+<span class="cm"># { } ile mevcut kabukta değişken paylaş</span><br>
+<span class="p">$&gt; </span><span class="c">{</span><br>
+<span class="p">&gt;  </span><span class="c">  BASLA=$(date +%s)</span><br>
+<span class="p">&gt;  </span><span class="c">  uzun_islem</span><br>
+<span class="p">&gt;  </span><span class="c">  BITIS=$(date +%s)</span><br>
+<span class="p">&gt;  </span><span class="c">  echo "Süre: $((BITIS-BASLA)) saniye"</span><br>
+<span class="p">&gt;  </span><span class="c">}</span><br>
+<span class="o">Süre: 4 saniye</span>
+      </div>
+      <div class="info-box success" style="margin-top:.75rem">
+        <div class="info-box-title">🌐 Gerçek Hayat: CI/CD & Derleme Sistemleri</div>
+        <p>Jenkins ve GitLab CI pipeline'larında paralel derleme adımları tam olarak <code style="color:var(--accent)">(cmd1; cmd2) &</code> mantığıyla çalışır. Süreli işlemler için { } ile zaman ölçümü yaygın bir DevOps kalıbıdır.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="next-row">
+    <button class="next-btn" onclick="goto(5)">Devam: Özet & Sınav →</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     SECTION 5 — ÖZET & SINAV
+═══════════════════════════════════ -->
+<div class="sec" id="sec5">
+  <div class="section-num">06 Özet & Sınav</div>
+  <h1 class="section-title">Cheat Sheet & Bilgi Sınaması</h1>
+
+  <div class="summary-grid">
+    <div class="sum-card">
+      <span class="sum-code">declare -a dizi</span>
+      <span class="sum-desc">Dizi tanımla (boyut belirtme)</span>
+    </div>
+    <div class="sum-card">
+      <span class="sum-code">dizi=(a b c)</span>
+      <span class="sum-desc">Toplu eleman ata</span>
+    </div>
+    <div class="sum-card">
+      <span class="sum-code">${dizi[2]}</span>
+      <span class="sum-desc">3. elemanı oku (0-tabanlı)</span>
+    </div>
+    <div class="sum-card">
+      <span class="sum-code">${dizi[@]}</span>
+      <span class="sum-desc">Tüm elemanlar (döngü için)</span>
+    </div>
+    <div class="sum-card">
+      <span class="sum-code">${#dizi[@]}</span>
+      <span class="sum-desc">Eleman sayısı</span>
+    </div>
+    <div class="sum-card tip">
+      <span class="sum-code">export VAR</span>
+      <span class="sum-desc">Değişkeni child process'e kalıt</span>
+    </div>
+    <div class="sum-card tip">
+      <span class="sum-code">declare -x VAR</span>
+      <span class="sum-desc">export ile aynı işlev</span>
+    </div>
+    <div class="sum-card tip">
+      <span class="sum-code">export -p</span>
+      <span class="sum-desc">Export edilmiş değişkenleri listele</span>
+    </div>
+    <div class="sum-card">
+      <span class="sum-code">( komutlar )</span>
+      <span class="sum-desc">Subshell — cd/değişken sızmaz</span>
+    </div>
+    <div class="sum-card warn">
+      <span class="sum-code">{ komutlar; }</span>
+      <span class="sum-desc">Mevcut kabuk — kalıcı değişir</span>
+    </div>
+    <div class="sum-card">
+      <span class="sum-code">( ) 2>hata &</span>
+      <span class="sum-desc">Arka planda + hata yönlendirme</span>
+    </div>
+    <div class="sum-card tip">
+      <span class="sum-code">$dizi</span>
+      <span class="sum-desc">= ${dizi[0]} — sadece ilk eleman!</span>
+    </div>
+  </div>
+
+  <hr class="divider">
+  <h2 style="font-size:18px;font-weight:500;margin-bottom:1.25rem;color:var(--text)">🎯 Bilgi Sınaması</h2>
+
+  <div id="quizWrap">
+    <div class="progress-bar-wrap"><div class="progress-bar" id="qProgress" style="width:0%"></div></div>
+    <div id="qBox"></div>
+  </div>
+
+  <div style="margin-top:2rem; padding-top:1.5rem; border-top:1px solid var(--border)">
+    <p style="font-size:12px;color:var(--text3)">Kaynak: Chapter Eight — Basic Shell Scripting (Slides 11–14)</p>
+  </div>
+</div>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-info">Hafta 8 · Temel Kabuk Programlama · Dizi · Export · ( ) { }</div>
+  <div class="footer-actions">
+    <button class="foot-btn" onclick="goto(0)">↩ Başa Dön</button>
+    <button class="foot-btn" onclick="window.print()">🖨 Yazdır / PDF</button>
+  </div>
+</footer>
+
+<script>
+/* ── TIMER ── */
+let timerSec = 900, timerRunning = false, timerInterval = null;
+function fmt(s){ return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); }
+function toggleTimer(){
+  if(timerRunning){ clearInterval(timerInterval); timerRunning=false; document.getElementById('timerStartBtn').textContent='▶ Başlat'; }
+  else{ timerInterval=setInterval(()=>{ if(timerSec>0){ timerSec--; document.getElementById('timerDisplay').textContent=fmt(timerSec); } else clearInterval(timerInterval); },1000); timerRunning=true; document.getElementById('timerStartBtn').textContent='⏸ Duraklat'; }
+}
+function resetTimer(){ clearInterval(timerInterval); timerRunning=false; timerSec=900; document.getElementById('timerDisplay').textContent='15:00'; document.getElementById('timerStartBtn').textContent='▶ Başlat'; }
+
+/* ── NAVIGATION ── */
+let currentSec = 0;
+const visited = new Set([0]);
+function goto(i){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  document.getElementById('sec'+i).classList.add('active');
+  visited.add(i);
+  currentSec = i;
+  document.querySelectorAll('.nav-pill').forEach((p,idx)=>{
+    p.classList.remove('active','done');
+    if(idx===i) p.classList.add('active');
+    else if(visited.has(idx)) p.classList.add('done');
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(i===5) initQuiz();
+}
+
+/* ── EXAMPLES TOGGLE ── */
+function toggleEx(id){
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+}
+
+/* ── SIM RUN ── */
+function simRun(id){
+  const el = document.getElementById(id);
+  el.classList.add('show');
+}
+
+/* ── QUIZ ── */
+const questions = [
+  { q:"spor=(basketbol futbol tenis) tanımlandıktan sonra echo $spor çıktısı ne olur?", opts:["basketbol futbol tenis","basketbol","tenis","Hata verir"], ans:1, exp:"$spor → ${spor[0]} ile aynıdır. Yalnızca ilk eleman olan 'basketbol' döner." },
+  { q:"${#spor[@]} ne döndürür?", opts:["Tüm elemanları listeler","İlk elemanı döner","Eleman sayısını döner","Dizinin adını döner"], ans:2, exp:"# (hash/diyez) sembolü dizi eleman sayısını döndürür." },
+  { q:"export y komutunu çalıştırdıktan sonra child process y'yi görebilir mi?", opts:["Hayır, hiçbir zaman göremez","Evet, artık görebilir","Yalnızca declare -a ile görebilir","Bağlıdır"], ans:1, exp:"export komutu değişkeni ortam değişkeni yapar; child process'ler artık görebilir." },
+  { q:"x=50; (x=100); echo $x → çıktı ne olur?", opts:["100","50","x=100","Hata"], ans:1, exp:"Parantez subshell oluşturur. x=100 ataması dışarıya sızmaz; echo $x → 50." },
+  { q:"x=50; { x=100; }; echo $x → çıktı ne olur?", opts:["50","100","x=50","Tanımsız"], ans:1, exp:"Süslü parantez mevcut kabukta çalışır. x=100 kalıcıdır; echo $x → 100." },
+  { q:"Hangi komut declare -x ile eşdeğerdir?", opts:["import","source","export","unset"], ans:2, exp:"export ve declare -x aynı işi yapar: değişkeni child process'e kalıtır." },
+  { q:"Bir dizinin tüm elemanlarını döngüyle işlemek için hangisi doğrudur?", opts:["for i in $dizi","for i in ${dizi[0]}","for i in ${dizi[@]}","for i in ${#dizi}"], ans:2, exp:"${dizi[@]} tüm elemanları ayrı ayrı döndürür. Döngüler için doğru seçim budur." },
+  { q:"( cd /tmp; ls; ) komutundan sonra pwd ne gösterir?", opts:["/tmp","Hata","Mevcut çalışma dizini (değişmedi)","/ (kök)"], ans:2, exp:"Parantez subshell'de çalışır. cd değişikliği dışarıya yansımaz; pwd değişmez." },
+];
+
+let qIdx=0, qScore=0, qAnswered=false;
+
+function initQuiz(){ qIdx=0; qScore=0; qAnswered=false; renderQ(); }
+
+function renderQ(){
+  const q = questions[qIdx];
+  document.getElementById('qProgress').style.width = (qIdx/questions.length*100)+'%';
+  let html = `<div class="quiz-counter">Soru ${qIdx+1} / ${questions.length}</div>
+  <div class="quiz-q">${q.q}</div>
+  <div class="quiz-opts">`;
+  q.opts.forEach((o,i)=>{
+    html += `<button class="qopt" id="qo${i}" onclick="pickQ(${i})">${o}</button>`;
+  });
+  html += `</div><div class="q-feedback" id="qfb"></div>
+  <div class="quiz-nav">
+    <button class="q-nav-btn" onclick="prevQ()" ${qIdx===0?'disabled':''}>← Geri</button>
+    <span class="score-txt">Skor: ${qScore} / ${questions.length}</span>
+    <button class="q-nav-btn" onclick="nextQ()" ${qIdx===questions.length-1?'disabled':''}>İleri →</button>
+  </div>`;
+  document.getElementById('qBox').innerHTML = html;
+  qAnswered = false;
+}
+
+function pickQ(i){
+  if(qAnswered) return;
+  qAnswered = true;
+  const q = questions[qIdx];
+  document.querySelectorAll('.qopt').forEach(b=>b.disabled=true);
+  const btn = document.getElementById('qo'+i);
+  const fb  = document.getElementById('qfb');
+  if(i===q.ans){ btn.classList.add('correct'); qScore++; fb.className='q-feedback ok'; fb.textContent='✓ '+q.exp; }
+  else{ btn.classList.add('wrong'); document.getElementById('qo'+q.ans).classList.add('correct'); fb.className='q-feedback no'; fb.textContent='✗ Yanlış. '+q.exp; }
+  document.querySelector('.score-txt').textContent = 'Skor: '+qScore+' / '+questions.length;
+}
+
+function nextQ(){ if(qIdx<questions.length-1){ qIdx++; renderQ(); } }
+function prevQ(){ if(qIdx>0){ qIdx--; renderQ(); } }
+</script>
+</body>
+</html>
