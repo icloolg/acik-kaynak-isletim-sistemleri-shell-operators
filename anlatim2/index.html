@@ -491,6 +491,72 @@ footer {
 }
 .foot-btn:hover { border-color: var(--accent); color: var(--accent); }
 
+/* ── ZSH BANNER ── */
+.zsh-banner {
+  background: linear-gradient(135deg, rgba(226,108,108,.12), rgba(247,201,72,.08));
+  border: 1px solid rgba(226,108,108,.35);
+  border-left: 4px solid var(--accent4);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+}
+.zsh-banner-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent4);
+  margin-bottom: .5rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.zsh-banner p { font-size: 13px; color: var(--text2); line-height: 1.7; margin-bottom:.5rem; }
+.zsh-banner p:last-child { margin-bottom:0; }
+.zsh-table { width:100%; border-collapse:collapse; font-size:12px; margin:.6rem 0; }
+.zsh-table th { background:rgba(255,255,255,.04); color:var(--text3); font-weight:500; padding:5px 10px; text-align:left; border-bottom:1px solid var(--border); }
+.zsh-table td { padding:5px 10px; border-bottom:1px solid rgba(42,51,71,.5); font-family:var(--mono); }
+.zsh-table tr:last-child td { border-bottom:none; }
+.zsh-table td:first-child { color:var(--accent3); }
+.zsh-table td.ok { color:var(--accent2); }
+.zsh-table td.no { color:var(--accent4); }
+.zsh-cmd { display:inline-block; background:#0a0d14; border:1px solid var(--border); border-radius:5px; padding:3px 10px; font-family:var(--mono); font-size:12px; color:var(--accent2); margin-top:.4rem; }
+
+/* ── DERS NOTU ── */
+.ders-notu {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin: 1.5rem 0;
+}
+.ders-notu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .85rem 1.25rem;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+}
+.ders-notu-header-left { display:flex; align-items:center; gap:.6rem; font-size:14px; font-weight:500; color:var(--accent); }
+.ders-notu-body { display:none; padding:1.25rem; }
+.ders-notu.open .ders-notu-body { display:block; }
+.ders-notu.open .dn-chevron { transform:rotate(90deg); }
+.dn-chevron { font-size:14px; color:var(--text3); transition:transform .2s; }
+.dn-step { display:flex; gap:.75rem; margin-bottom:1rem; }
+.dn-step:last-child { margin-bottom:0; }
+.dn-num {
+  width:24px; height:24px; min-width:24px;
+  border-radius:50%;
+  background: rgba(79,142,247,.15);
+  border: 1px solid rgba(79,142,247,.3);
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; color:var(--accent);
+  margin-top:1px;
+}
+.dn-content h4 { font-size:14px; font-weight:500; color:var(--text); margin-bottom:.3rem; }
+.dn-content p  { font-size:13px; color:var(--text2); line-height:1.65; }
+
 /* HIDDEN SECTIONS */
 .sec { display: none; }
 .sec.active { display: block; }
@@ -529,7 +595,7 @@ footer {
 <div class="meta-bar">
   <div class="meta-item">🖥 <strong>Bölüm 8</strong> Basic Shell Scripting</div>
   <div class="meta-item">⏱ <strong>10–15 dakika</strong></div>
-  <div class="meta-item">📚 <strong>6 bölüm</strong> · 6 soru</div>
+  <div class="meta-item">📚 <strong>6 bölüm</strong> · 8 soru</div>
 </div>
 
 <!-- NAV BAR -->
@@ -577,6 +643,59 @@ footer {
     <p>Temel değişken atama (<code style="color:var(--accent)">x=10</code>), echo ve komut satırı kullanımını bildiğiniz varsayılmaktadır.</p>
   </div>
 
+  <!-- ZSH UYARISI -->
+  <div class="zsh-banner">
+    <div class="zsh-banner-title">⚠️ zsh Kullanıcıları Dikkat — macOS Varsayılanı</div>
+    <p>macOS'ta terminal açtığınızda <strong>zsh</strong> (Z Shell) çalışır. Bu ders <strong>bash</strong> davranışını anlatmaktadır. İkisi arasında dizi konusunda kritik farklar vardır:</p>
+    <table class="zsh-table">
+      <tr><th>Özellik</th><th>bash</th><th>zsh</th></tr>
+      <tr><td>İlk indeks</td><td class="ok">0</td><td class="no">1</td></tr>
+      <tr><td>${dizi[0]}</td><td class="ok">İlk eleman</td><td class="no">Boş döner!</td></tr>
+      <tr><td>$dizi</td><td class="ok">Sadece ilk eleman</td><td class="no">Tüm diziyi döner</td></tr>
+    </table>
+    <p>Örnekleri terminalde denemek için önce bash'e geçin:</p>
+    <span class="zsh-cmd">$ bash</span>
+    <p style="margin-top:.6rem">Hangi kabuğu kullandığınızı öğrenmek için: <span style="font-family:var(--mono);color:var(--accent3)">echo $SHELL</span> → <span style="font-family:var(--mono);color:var(--text2)">/usr/bin/zsh</span> yazıyorsa zsh'desiniz.</p>
+  </div>
+
+  <!-- DERS ANLATIMI NOTU -->
+  <div class="ders-notu open" id="dersNotu0">
+    <div class="ders-notu-header" onclick="toggleDers('dersNotu0')">
+      <div class="ders-notu-header-left">🎓 Ders Anlatımı — Bu Derste Ne Yapacağız?</div>
+      <span class="dn-chevron">›</span>
+    </div>
+    <div class="ders-notu-body">
+      <div class="dn-step">
+        <div class="dn-num">1</div>
+        <div class="dn-content">
+          <h4>Neden dizi değişkeni kullanırız?</h4>
+          <p>Tek bir değişkende birden fazla değer saklamak istediğimizde dizi kullanırız. Örneğin 5 öğrencinin notunu 5 ayrı değişkende tutmak yerine <code style="color:var(--accent)">notlar=(85 90 72 95 88)</code> şeklinde tek dizide tutabiliriz. Bu hem kodun okunmasını hem de yönetilmesini kolaylaştırır.</p>
+        </div>
+      </div>
+      <div class="dn-step">
+        <div class="dn-num">2</div>
+        <div class="dn-content">
+          <h4>Neden indeks 0'dan başlar?</h4>
+          <p>Bash ve pek çok programlama dili dizileri bellekte ardışık konumda saklar. İlk konumun adresi başlangıç noktasının tam kendisidir — yani 0 ofset. Bu, C dilinden gelen ve bilgisayar mimarisine dayanan bir gelenektir. zsh farklı bir tasarım tercihi yaparak 1'den başlatmıştır.</p>
+        </div>
+      </div>
+      <div class="dn-step">
+        <div class="dn-num">3</div>
+        <div class="dn-content">
+          <h4>Neden export gerekir?</h4>
+          <p>Linux'ta her süreç (process) kendi bellek alanında çalışır. Bir script çalıştırdığınızda yeni bir süreç doğar. Bu süreç, üst kabuğun değişkenlerini <em>otomatik olarak görmez</em>. <code style="color:var(--accent)">export</code> komutu değişkeni "ortam" (environment) katmanına taşır; bu katman tüm alt süreçlerle paylaşılır.</p>
+        </div>
+      </div>
+      <div class="dn-step">
+        <div class="dn-num">4</div>
+        <div class="dn-content">
+          <h4>( ) ile { } neden farklı davranır?</h4>
+          <p>Parantez <code style="color:var(--accent)">()</code> işletim sistemine yeni bir süreç açtırır — tıpkı yeni bir program başlatmak gibi. Süslü parantez <code style="color:var(--accent)">{}</code> ise yeni süreç açmaz, komutları doğrudan mevcut kabukta sırayla çalıştırır. Bu yüzden <code style="color:var(--accent)">()</code> içindeki değişiklikler dışarıya sızmaz, <code style="color:var(--accent)">{}</code> içindekiler sızar.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="next-row">
     <button class="next-btn" onclick="goto(1)">Devam: Dizi Temelleri →</button>
   </div>
@@ -595,6 +714,43 @@ footer {
   <div class="info-box warn">
     <div class="info-box-title">💡 Temel Kural</div>
     <p><code style="color:var(--accent3)">$dizi</code> yazmak <code style="color:var(--accent3)">${dizi[0]}</code> ile aynıdır — yani her zaman ilk elemanı döner!</p>
+  </div>
+
+  <div class="zsh-banner">
+    <div class="zsh-banner-title">⚠️ zsh'de Aynı Komutu Çalıştırırsanız</div>
+    <p><code style="color:var(--accent4)">echo ${spor[0]}</code> → zsh'de <strong>boş döner</strong> (zsh'de indeks 1'den başlar, 0. eleman yoktur)<br>
+    <code style="color:var(--accent4)">echo $spor</code> → zsh'de <strong>tüm diziyi döner</strong> (bash'de sadece ilk eleman döner)</p>
+    <p>Bu yüzden örnekleri denemeden önce terminale <span class="zsh-cmd">bash</span> yazın.</p>
+  </div>
+
+  <div class="ders-notu" id="dersNotu1">
+    <div class="ders-notu-header" onclick="toggleDers('dersNotu1')">
+      <div class="ders-notu-header-left">🎓 Ders Anlatımı — Dizi Nasıl Çalışır?</div>
+      <span class="dn-chevron">›</span>
+    </div>
+    <div class="ders-notu-body">
+      <div class="dn-step">
+        <div class="dn-num">1</div>
+        <div class="dn-content">
+          <h4>declare -a ne işe yarar?</h4>
+          <p><code style="color:var(--accent)">declare -a spor</code> komutu bash'e "spor adında bir dizi değişkeni kullanacağım" der. Zorunlu değildir — doğrudan <code style="color:var(--accent)">spor=(...</code> ile de oluşturabilirsiniz — ama iyi bir alışkanlıktır. Kodu okuyan kişi değişkenin dizi olduğunu anında görür.</p>
+        </div>
+      </div>
+      <div class="dn-step">
+        <div class="dn-num">2</div>
+        <div class="dn-content">
+          <h4>Parantez içi atama nasıl çalışır?</h4>
+          <p><code style="color:var(--accent)">spor=(basketbol futbol tenis)</code> yazınca bash boşlukları ayraç olarak kullanır ve her kelimeyi sırayla 0, 1, 2 indeksine atar. Dikkat: değerler tırnak içinde değilse boşluk içeren değerler yanlış bölünür.</p>
+        </div>
+      </div>
+      <div class="dn-step">
+        <div class="dn-num">3</div>
+        <div class="dn-content">
+          <h4>spor[3]=hokey neden 4. eleman?</h4>
+          <p>İndeks 0'dan başlar: 0→basketbol, 1→futbol, 2→tenis. Dolayısıyla 3. indeks 4. pozisyondur. Aradaki boşluklara (index 4, 5 gibi) ilerleyen atamalar yapılabilir; bash "seyrek dizi" (sparse array) destekler.</p>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- EXAMPLE 1 -->
@@ -1060,6 +1216,10 @@ footer {
       <span class="sum-code">$dizi</span>
       <span class="sum-desc">= ${dizi[0]} — sadece ilk eleman!</span>
     </div>
+    <div class="sum-card warn">
+      <span class="sum-code">zsh vs bash</span>
+      <span class="sum-desc">zsh'de indeks 1'den başlar, $dizi tüm diziyi döner. Örnekler için: bash</span>
+    </div>
   </div>
 
   <hr class="divider">
@@ -1119,6 +1279,12 @@ function toggleEx(id){
   el.classList.toggle('open');
 }
 
+/* ── DERS NOTU TOGGLE ── */
+function toggleDers(id){
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+}
+
 /* ── SIM RUN ── */
 function simRun(id){
   const el = document.getElementById(id);
@@ -1132,7 +1298,8 @@ const questions = [
   { q:"export y komutunu çalıştırdıktan sonra child process y'yi görebilir mi?", opts:["Hayır, hiçbir zaman göremez","Evet, artık görebilir","Yalnızca declare -a ile görebilir","Bağlıdır"], ans:1, exp:"export komutu değişkeni ortam değişkeni yapar; child process'ler artık görebilir." },
   { q:"x=50; (x=100); echo $x → çıktı ne olur?", opts:["100","50","x=100","Hata"], ans:1, exp:"Parantez subshell oluşturur. x=100 ataması dışarıya sızmaz; echo $x → 50." },
   { q:"x=50; { x=100; }; echo $x → çıktı ne olur?", opts:["50","100","x=50","Tanımsız"], ans:1, exp:"Süslü parantez mevcut kabukta çalışır. x=100 kalıcıdır; echo $x → 100." },
-  { q:"Hangi komut declare -x ile eşdeğerdir?", opts:["import","source","export","unset"], ans:2, exp:"export ve declare -x aynı işi yapar: değişkeni child process'e kalıtır." },
+  { q:"macOS'ta varsayılan kabuk hangisidir ve dizi indeksi kaçtan başlar?", opts:["bash — 0'dan","zsh — 0'dan","bash — 1'den","zsh — 1'den"], ans:3, exp:"macOS'ta varsayılan kabuk zsh'dir ve zsh'de dizi indeksleri 1'den başlar. bash'de 0'dan başlar." },
+  { q:"zsh'de echo $spor ne döner? (spor=(basketbol futbol tenis))", opts:["basketbol","basketbol futbol tenis","Boş string","Hata verir"], ans:1, exp:"zsh'de $dizi tüm diziyi döner. bash'de ise yalnızca ilk eleman (${dizi[0]}) döner." },
   { q:"Bir dizinin tüm elemanlarını döngüyle işlemek için hangisi doğrudur?", opts:["for i in $dizi","for i in ${dizi[0]}","for i in ${dizi[@]}","for i in ${#dizi}"], ans:2, exp:"${dizi[@]} tüm elemanları ayrı ayrı döndürür. Döngüler için doğru seçim budur." },
   { q:"( cd /tmp; ls; ) komutundan sonra pwd ne gösterir?", opts:["/tmp","Hata","Mevcut çalışma dizini (değişmedi)","/ (kök)"], ans:2, exp:"Parantez subshell'de çalışır. cd değişikliği dışarıya yansımaz; pwd değişmez." },
 ];
