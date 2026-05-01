@@ -25,8 +25,9 @@ Bu çalışma, Linux/Unix shell yapısının temel bileşenlerini ve operatör k
 * Değişken dışa aktarma (`export`, `declare -x`, `export -p`)
 * `( )` ve `{ }` gruplama yapıları (subshell vs. mevcut kabuk)
 * Gerçek dünya senaryoları ve interaktif sınav
-
-
+  
+<Dokümana erişmek için>
+https://icloolg.github.io/acik-kaynak-isletim-sistemleri-shell-operators/anlatim2/
 
 Bu çalışma, Bash'in dizi yapısını, değişken kalıtımını ve komut gruplama mekanizmalarını öğretmeyi amaçlamaktadır.
 
