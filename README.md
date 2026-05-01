@@ -16,4 +16,20 @@ https://icloolg.github.io/acik-kaynak-isletim-sistemleri-shell-operators/
 
 Bu çalışma, Linux/Unix shell yapısının temel bileşenlerini ve operatör kullanımını öğretmeyi amaçlamaktadır.
 
+---
+
+### Anlatım 2: Temel Kabuk Programlama — Dizi · Export · Subshell
+
+* Dizi değişkenleri (`declare -a`, indeks erişimi, toplu atama)
+* Tüm dizi ve eleman sayısı (`${dizi[@]}`, `${#dizi[@]}`)
+* Değişken dışa aktarma (`export`, `declare -x`, `export -p`)
+* `( )` ve `{ }` gruplama yapıları (subshell vs. mevcut kabuk)
+* Gerçek dünya senaryoları ve interaktif sınav
+
+
+
+Bu çalışma, Bash'in dizi yapısını, değişken kalıtımını ve komut gruplama mekanizmalarını öğretmeyi amaçlamaktadır.
+
+---
+
 ## 👩‍💻 Hazırlayan: İclal Gül
