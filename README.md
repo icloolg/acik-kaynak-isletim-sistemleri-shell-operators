@@ -49,4 +49,4 @@ Bu çalışma, Bash'te koşullu ifade oluşturmayı, test komutunun tüm operat�
 
 ---
 
-## 👩‍💻 Hazırlayan: İclal Gül
+##  Hazırlayan: İclal Gül
