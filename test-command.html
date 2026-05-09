@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bash: test Komutu · Shell Scripting</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f1117;
+  --surface: #161b27;
+  --surface2: #1e2535;
+  --border: #2a3347;
+  --accent: #4f8ef7;
+  --accent2: #38c9a0;
+  --accent3: #f7c948;
+  --accent4: #e26c6c;
+  --text: #e8eaf0;
+  --text2: #8a93a8;
+  --text3: #5a6480;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+  --radius: 10px;
+  --radius-lg: 16px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+/* HEADER */
+header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; gap: 1rem; flex-wrap: wrap; }
+.header-left { display: flex; flex-direction: column; gap: 2px; }
+.course-label { font-size: 11px; font-weight: 500; color: var(--accent); letter-spacing: .08em; text-transform: uppercase; }
+.header-title { font-size: 15px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; }
+.dot { color: var(--text3); }
+
+/* TIMER */
+.timer-box { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.timer-label { font-size: 11px; color: var(--text3); letter-spacing: .06em; text-transform: uppercase; }
+.timer-display { font-family: var(--mono); font-size: 22px; font-weight: 600; color: var(--accent3); letter-spacing: .05em; }
+.timer-controls { display: flex; gap: 6px; }
+.t-btn { padding: 4px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface2); color: var(--text2); font-size: 12px; cursor: pointer; font-family: var(--sans); transition: all .15s; }
+.t-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* META */
+.meta-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: .6rem 2rem; display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+.meta-item { font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 5px; }
+.meta-item strong { color: var(--text); }
+
+/* NAV */
+.nav-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: .75rem 2rem; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.nav-pill { display: flex; align-items: center; gap: 6px; padding: 5px 14px; border-radius: 999px; border: 1px solid var(--border); background: transparent; color: var(--text2); font-size: 13px; cursor: pointer; font-family: var(--sans); transition: all .2s; }
+.nav-pill:hover { border-color: var(--accent); color: var(--accent); }
+.nav-pill.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 500; }
+.nav-pill.done { border-color: var(--accent2); color: var(--accent2); }
+.nav-pill .n { width: 18px; height: 18px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; }
+.nav-pill.active .n { background: rgba(255,255,255,.25); }
+.nav-pill.done .n { background: var(--accent2); color: #052e1e; }
+
+/* MAIN */
+main { flex: 1; max-width: 860px; width: 100%; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+.section-num { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--accent); letter-spacing: .1em; text-transform: uppercase; margin-bottom: .4rem; }
+.section-title { font-size: 26px; font-weight: 600; color: var(--text); margin-bottom: 1.5rem; line-height: 1.2; }
+.section-intro { font-size: 15px; color: var(--text2); line-height: 1.7; margin-bottom: 1.5rem; }
+
+/* FD CARDS */
+.fd-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 1.5rem 0; }
+.fd-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; text-align: center; }
+.fd-num { font-family: var(--mono); font-size: 11px; color: var(--text3); margin-bottom: .4rem; }
+.fd-name { font-family: var(--mono); font-size: 18px; font-weight: 600; margin-bottom: .5rem; }
+.fd-card:nth-child(1) .fd-name { color: var(--accent3); }
+.fd-card:nth-child(2) .fd-name { color: var(--accent2); }
+.fd-card:nth-child(3) .fd-name { color: var(--accent4); }
+.fd-card:nth-child(4) .fd-name { color: var(--accent); }
+.fd-desc { font-size: 12px; color: var(--text2); line-height: 1.5; }
+
+/* INFO BOX */
+.info-box { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: var(--radius); padding: 1rem 1.25rem; margin: 1rem 0; }
+.info-box.warn { border-left-color: var(--accent3); }
+.info-box.success { border-left-color: var(--accent2); }
+.info-box.danger { border-left-color: var(--accent4); }
+.info-box-title { font-size: 12px; font-weight: 600; color: var(--text3); letter-spacing: .06em; text-transform: uppercase; margin-bottom: .5rem; }
+.info-box p { font-size: 14px; color: var(--text2); line-height: 1.6; }
+
+/* EXAMPLE CARDS */
+.example { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); margin-bottom: 1rem; overflow: hidden; }
+.example-header { display: flex; align-items: center; justify-content: space-between; padding: .75rem 1.25rem; border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; transition: background .15s; }
+.example-header:hover { background: var(--surface2); }
+.example-header-left { display: flex; align-items: center; gap: .75rem; }
+.diff-badge { padding: 2px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+.diff-easy { background: rgba(56,201,160,.15); color: var(--accent2); border: 1px solid rgba(56,201,160,.3); }
+.diff-mid  { background: rgba(247,201,72,.12); color: var(--accent3); border: 1px solid rgba(247,201,72,.3); }
+.diff-hard { background: rgba(226,108,108,.12); color: var(--accent4); border: 1px solid rgba(226,108,108,.3); }
+.example-title { font-size: 14px; font-weight: 500; color: var(--text); }
+.example-meta { font-size: 12px; color: var(--text3); }
+.chevron { font-size: 14px; color: var(--text3); transition: transform .2s; }
+.example.open .chevron { transform: rotate(90deg); }
+.example-body { display: none; padding: 1.25rem; }
+.example.open .example-body { display: block; }
+
+/* TERMINAL */
+.term-header { display: flex; align-items: center; justify-content: space-between; background: #0a0d14; border-radius: var(--radius) var(--radius) 0 0; padding: .5rem 1rem; border: 1px solid #1e2535; border-bottom: none; }
+.term-dots { display: flex; gap: 6px; }
+.term-dots span { width: 10px; height: 10px; border-radius: 50%; }
+.term-dots span:nth-child(1) { background: #e26c6c; }
+.term-dots span:nth-child(2) { background: #f7c948; }
+.term-dots span:nth-child(3) { background: #38c9a0; }
+.term-lang { font-size: 11px; color: var(--text3); font-family: var(--mono); }
+.term-body { background: #080b12; border: 1px solid #1e2535; border-radius: 0 0 var(--radius) var(--radius); padding: 1rem 1.25rem; font-family: var(--mono); font-size: 13px; line-height: 1.9; overflow-x: auto; }
+.p  { color: #4ade80; }
+.c  { color: #e8eaf0; }
+.o  { color: #94a3b8; }
+.cm { color: #4a5568; }
+.hl { color: var(--accent3); }
+.err-c { color: var(--accent4); }
+.kw { color: #c084fc; }
+.str { color: var(--accent3); }
+
+/* RUN BTN & SIM */
+.run-wrap { display: flex; justify-content: flex-end; margin-top: .75rem; }
+.run-btn { padding: 6px 16px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface2); color: var(--text2); font-size: 12px; font-family: var(--sans); cursor: pointer; transition: all .15s; display: flex; align-items: center; gap: 6px; }
+.run-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+.sim-out { display: none; margin-top: .75rem; background: #06080e; border: 1px solid #1e2535; border-radius: var(--radius); padding: .75rem 1rem; font-family: var(--mono); font-size: 13px; line-height: 1.7; color: #4ade80; white-space: pre; }
+.sim-out.show { display: block; }
+
+/* OP TABLE */
+.op-table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 1rem 0; }
+.op-table th { background: var(--surface2); color: var(--text2); font-weight: 500; padding: 8px 14px; text-align: left; border-bottom: 1px solid var(--border); font-size: 12px; letter-spacing: .04em; }
+.op-table td { padding: 8px 14px; border-bottom: 1px solid var(--border); color: var(--text); }
+.op-table tr:last-child td { border-bottom: none; }
+.op-table td:first-child { font-family: var(--mono); color: var(--accent3); font-weight: 600; }
+.op-table td:nth-child(2) { color: var(--text2); font-size: 13px; }
+.op-table td:last-child { font-family: var(--mono); font-size: 12px; color: var(--accent2); }
+.op-table tr:hover td { background: rgba(255,255,255,.02); }
+
+/* SUMMARY GRID */
+.summary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: .75rem; margin: 1.5rem 0; }
+.sum-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; }
+.sum-code { font-family: var(--mono); font-size: 13px; color: var(--accent); margin-bottom: .5rem; display: block; }
+.sum-desc { font-size: 12px; color: var(--text2); line-height: 1.5; }
+.sum-card.warn .sum-code { color: var(--accent4); }
+.sum-card.tip .sum-code  { color: var(--accent2); }
+.sum-card.num .sum-code  { color: var(--accent3); }
+
+/* DERS NOTU */
+.ders-notu { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin: 1.5rem 0; }
+.ders-notu-header { display: flex; align-items: center; justify-content: space-between; padding: .85rem 1.25rem; background: var(--surface2); border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; }
+.ders-notu-header-left { display: flex; align-items: center; gap: .6rem; font-size: 14px; font-weight: 500; color: var(--accent); }
+.ders-notu-body { display: none; padding: 1.25rem; }
+.ders-notu.open .ders-notu-body { display: block; }
+.ders-notu.open .dn-chevron { transform: rotate(90deg); }
+.dn-chevron { font-size: 14px; color: var(--text3); transition: transform .2s; }
+.dn-step { display: flex; gap: .75rem; margin-bottom: 1rem; }
+.dn-step:last-child { margin-bottom: 0; }
+.dn-num { width: 24px; height: 24px; min-width: 24px; border-radius: 50%; background: rgba(79,142,247,.15); border: 1px solid rgba(79,142,247,.3); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--accent); margin-top: 1px; }
+.dn-content h4 { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: .3rem; }
+.dn-content p  { font-size: 13px; color: var(--text2); line-height: 1.65; }
+
+/* SCRIPT DOSYASI */
+.script-file { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin: 1rem 0; }
+.script-file-header { display: flex; align-items: center; gap: .6rem; padding: .6rem 1rem; background: #0d1018; border-bottom: 1px solid var(--border); }
+.script-file-name { font-family: var(--mono); font-size: 12px; color: var(--accent2); }
+.script-file-badge { font-size: 10px; padding: 2px 8px; border-radius: 999px; background: rgba(56,201,160,.1); color: var(--accent2); border: 1px solid rgba(56,201,160,.2); }
+
+/* NEXT / DIVIDER / FOOTER */
+.divider { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+.next-row { display: flex; justify-content: flex-end; margin-top: 2rem; }
+.next-btn { padding: 10px 24px; border: 1px solid var(--accent); border-radius: 8px; background: transparent; color: var(--accent); font-size: 14px; font-family: var(--sans); cursor: pointer; transition: all .15s; display: flex; align-items: center; gap: 6px; }
+.next-btn:hover { background: var(--accent); color: #fff; }
+
+/* QUIZ */
+.quiz-q { font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 1rem; line-height: 1.5; }
+.quiz-counter { font-size: 12px; color: var(--text3); margin-bottom: .5rem; }
+.quiz-opts { display: flex; flex-direction: column; gap: 8px; }
+.qopt { padding: 10px 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface2); color: var(--text); font-size: 14px; text-align: left; cursor: pointer; font-family: var(--sans); transition: all .15s; }
+.qopt:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.qopt.correct { background: rgba(56,201,160,.1); border-color: var(--accent2); color: var(--accent2); }
+.qopt.wrong   { background: rgba(226,108,108,.1); border-color: var(--accent4); color: var(--accent4); }
+.qopt:disabled { cursor: default; }
+.q-feedback { margin-top: .75rem; padding: .75rem 1rem; border-radius: 8px; font-size: 13px; line-height: 1.5; display: none; }
+.q-feedback.ok  { background: rgba(56,201,160,.08); border: 1px solid rgba(56,201,160,.25); color: #7ee8c8; display: block; }
+.q-feedback.no  { background: rgba(226,108,108,.08); border: 1px solid rgba(226,108,108,.25); color: #f0a0a0; display: block; }
+.quiz-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; }
+.q-nav-btn { padding: 8px 18px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface2); color: var(--text2); font-size: 13px; font-family: var(--sans); cursor: pointer; transition: all .15s; }
+.q-nav-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.q-nav-btn:disabled { opacity: .35; cursor: default; }
+.score-txt { font-size: 13px; color: var(--text3); }
+.progress-bar-wrap { height: 3px; background: var(--border); border-radius: 99px; margin-bottom: 1.5rem; overflow: hidden; }
+.progress-bar { height: 100%; background: var(--accent); border-radius: 99px; transition: width .3s; }
+
+footer { background: var(--surface); border-top: 1px solid var(--border); padding: 1.25rem 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem; }
+.footer-info { font-size: 12px; color: var(--text3); }
+.footer-actions { display: flex; gap: 8px; }
+.foot-btn { padding: 6px 14px; border: 1px solid var(--border); border-radius: 6px; background: transparent; color: var(--text2); font-size: 12px; cursor: pointer; font-family: var(--sans); transition: all .15s; }
+.foot-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+.sec { display: none; }
+.sec.active { display: block; }
+
+@media (max-width: 600px) {
+  .fd-grid { grid-template-columns: 1fr 1fr; }
+  header { padding: .75rem 1rem; }
+  main { padding: 1.25rem 1rem 3rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header>
+  <div class="header-left">
+    <span class="course-label">Açık Kaynak Kodlu İşletim Sistemleri ve Programlama</span>
+    <div class="header-title">
+      Temel Kabuk Programlama
+      <span class="dot">·</span>
+      <span style="color:var(--text2);font-weight:400">test Komutu · Koşullu İfadeler</span>
+    </div>
+  </div>
+  <div class="timer-box">
+    <span class="timer-label">Süre</span>
+    <div class="timer-display" id="timerDisplay">15:00</div>
+    <div class="timer-controls">
+      <button class="t-btn" id="timerStartBtn" onclick="toggleTimer()">▶ Başlat</button>
+      <button class="t-btn" onclick="resetTimer()">↺ Sıfırla</button>
+    </div>
+  </div>
+</header>
+
+<!-- ══ META BAR ══ -->
+<div class="meta-bar">
+  <div class="meta-item">🖥 <strong>Bölüm 8</strong> Basic Shell Scripting</div>
+  <div class="meta-item">⏱ <strong>15 dakika</strong></div>
+  <div class="meta-item">📚 <strong>6 bölüm</strong> · 9 soru</div>
+  <div class="meta-item">📄 Slide 47+</div>
+</div>
+
+<!-- ══ NAV BAR ══ -->
+<nav class="nav-bar">
+  <button class="nav-pill active" onclick="goto(0)" id="pill0"><span class="n">1</span>Giriş</button>
+  <button class="nav-pill" onclick="goto(1)" id="pill1"><span class="n">2</span>Sayısal Operatörler</button>
+  <button class="nav-pill" onclick="goto(2)" id="pill2"><span class="n">3</span>String Operatörler</button>
+  <button class="nav-pill" onclick="goto(3)" id="pill3"><span class="n">4</span>Dosya Operatörleri</button>
+  <button class="nav-pill" onclick="goto(4)" id="pill4"><span class="n">5</span>Mantıksal & if</button>
+  <button class="nav-pill" onclick="goto(5)" id="pill5"><span class="n">6</span>Özet & Sınav</button>
+</nav>
+
+<main>
+
+<!-- ══════════════════════════════════
+     SECTION 0 — GİRİŞ
+══════════════════════════════════ -->
+<div class="sec active" id="sec0">
+  <div class="section-num">01 Giriş</div>
+  <h1 class="section-title">test Komutu Nedir?</h1>
+  <p class="section-intro">
+    <code style="color:var(--accent)">test</code> komutu, bir koşulun doğru mu yanlış mı olduğunu <strong>çıkış kodu</strong> (exit status) ile bildiren özel bir kabuk komutudur. Ekrana hiçbir şey yazdırmaz — sadece <strong>0</strong> (başarılı/doğru) veya <strong>1</strong> (başarısız/yanlış) döndürür. Bu çıkış kodu <code style="color:var(--accent)">if</code> gibi yapılarla birleştirilerek karar mekanizmaları oluşturulur.
+  </p>
+
+  <div class="fd-grid">
+    <div class="fd-card">
+      <div class="fd-num">ÇIKIŞ KODU</div>
+      <div class="fd-name">$?</div>
+      <div class="fd-desc">Son komutun sonucunu tutan özel değişken. 0 = başarı, 1 = hata.</div>
+    </div>
+    <div class="fd-card">
+      <div class="fd-num">SAYISAL</div>
+      <div class="fd-name">-eq -gt</div>
+      <div class="fd-desc">Sayıları karşılaştır: eşit mi, büyük mü, küçük mü?</div>
+    </div>
+    <div class="fd-card">
+      <div class="fd-num">STRING</div>
+      <div class="fd-name">= -z -n</div>
+      <div class="fd-desc">Metin karşılaştır: eşit mi, boş mu, dolu mu?</div>
+    </div>
+    <div class="fd-card">
+      <div class="fd-num">DOSYA</div>
+      <div class="fd-name">-f -d -r</div>
+      <div class="fd-desc">Dosya/dizin var mı? Okunabilir mi? Çalıştırılabilir mi?</div>
+    </div>
+  </div>
+
+  <div class="info-box">
+    <div class="info-box-title">🎙 Temel Mantık</div>
+    <p><code style="color:var(--accent)">test</code> komutu <strong>sessizdir</strong>: ekrana bir şey yazmaz. Sonucunu <code style="color:var(--accent)">echo $?</code> ile ya da doğrudan <code style="color:var(--accent)">if</code> bloğuyla okursunuz. 0 döndürmesi "koşul doğru", 1 döndürmesi "koşul yanlış" anlamına gelir.</p>
+  </div>
+
+  <div class="info-box warn">
+    <div class="info-box-title">💡 [ ] Kısayolu</div>
+    <p><code style="color:var(--accent3)">test $a -eq $b</code> ile <code style="color:var(--accent3)">[ $a -eq $b ]</code> tamamen aynıdır. Köşeli parantez <code style="color:var(--accent3)">test</code>'in sözdizimsel kısaltmasıdır. Bash scriptlerinde <code style="color:var(--accent3)">[ ]</code> kullanımı daha yaygındır.</p>
+  </div>
+
+  <div class="ders-notu open" id="dn0">
+    <div class="ders-notu-header" onclick="toggleDers('dn0')">
+      <div class="ders-notu-header-left">🎓 Ders Anlatımı — Neden test Komutuna İhtiyaç Var?</div>
+      <span class="dn-chevron">›</span>
+    </div>
+    <div class="ders-notu-body">
+      <div class="dn-step">
+        <div class="dn-num">1</div>
+        <div class="dn-content">
+          <h4>Her komut bir çıkış kodu döndürür</h4>
+          <p>Linux'ta çalışan her program bittiğinde işletim sistemine bir sayı bırakır. Bu sayı <strong>0 ise başarılı</strong>, <strong>0'dan farklıysa hata</strong> anlamına gelir. Bu evrensel kural tüm Unix araçlarında geçerlidir. <code style="color:var(--accent)">$?</code> değişkeni her zaman bir önceki komutun bu sonucunu tutar.</p>
+        </div>
+      </div>
+      <div class="dn-step">
+        <div class="dn-num">2</div>
+        <div class="dn-content">
+          <h4>test komutu bu kodu üretmek için özelleşmiştir</h4>
+          <p>Diğer komutlar kendi işlerini yaparken tesadüfen çıkış kodu üretir. <code style="color:var(--accent)">test</code> ise <em>yalnızca</em> koşul değerlendirmek için tasarlanmıştır: sayı karşılaştırır, string sınar, dosya varlığını kontrol eder. Çıktı üretmez, sadece kodu döndürür.</p>
+        </div>
+      </div>
+      <div class="dn-step">
+        <div class="dn-num">3</div>
+        <div class="dn-content">
+          <h4>if ile birleşince karar mekanizması oluşur</h4>
+          <p>Shell programlamanın kalbi budur: <code style="color:var(--accent)">if</code> deyimi bir komutun çıkış koduna bakar. Eğer 0 ise <code style="color:var(--accent)">then</code> bloğunu, değilse <code style="color:var(--accent)">else</code> bloğunu çalıştırır. <code style="color:var(--accent)">test</code> bu kodu üretir, <code style="color:var(--accent)">if</code> bunu tüketir.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="next-row">
+    <button class="next-btn" onclick="goto(1)">Devam: Sayısal Operatörler →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SECTION 1 — SAYISAL OPERATÖRLER
+══════════════════════════════════ -->
+<div class="sec" id="sec1">
+  <div class="section-num">02 Sayısal Operatörler</div>
+  <h1 class="section-title">Sayıları Karşılaştırmak</h1>
+  <p class="section-intro">
+    <code style="color:var(--accent)">test</code> komutu sayısal karşılaştırma için özel bayraklar kullanır. Matematikteki <code>&gt;</code> ve <code>&lt;</code> sembolleri shell'de yönlendirme operatörü olduğundan sayısal karşılaştırmada kullanılamaz — bunun yerine sözcük kısaltmaları kullanılır.
+  </p>
+
+  <table class="op-table">
+    <tr><th>Operatör</th><th>Anlamı</th><th>Örnek</th></tr>
+    <tr><td>-eq</td><td>Eşit (equal)</td><td>test $a -eq $b</td></tr>
+    <tr><td>-ne</td><td>Eşit değil (not equal)</td><td>test $a -ne $b</td></tr>
+    <tr><td>-gt</td><td>Büyüktür (greater than)</td><td>test $a -gt $b</td></tr>
+    <tr><td>-lt</td><td>Küçüktür (less than)</td><td>test $a -lt $b</td></tr>
+    <tr><td>-ge</td><td>Büyük veya eşit (≥)</td><td>test $a -ge $b</td></tr>
+    <tr><td>-le</td><td>Küçük veya eşit (≤)</td><td>test $a -le $b</td></tr>
+  </table>
+
+  <div class="example open" id="ex1">
+    <div class="example-header" onclick="toggleEx('ex1')">
+      <div class="example-header-left">
+        <span class="diff-badge diff-easy">Basit</span>
+        <span class="example-title">$? ile çıkış kodu okuma</span>
+      </div>
+      <div class="example-meta">~1 dk <span class="chevron">›</span></div>
+    </div>
+    <div class="example-body">
+      <p style="font-size:14px;color:var(--text2);margin-bottom:.75rem">Slayttaki örneği adım adım inceleyelim. <code style="color:var(--accent)">a=12</code>, <code style="color:var(--accent)">b=23</code> olduğundan 12 eşit 23 yanlıştır → test 1 döndürür.</p>
+      <div class="term-header"><div class="term-dots"><span></span><span></span><span></span></div><span class="term-lang">bash</span></div>
+      <div class="term-body">
+<span class="p">$&gt; </span><span class="c">a=12; b=23</span><br>
+<span class="p">$&gt; </span><span class="c">test $a -eq $b</span>    <span class="cm"># 12 == 23? → yanlış</span><br>
+<span class="p">$&gt; </span><span class="c">echo $?</span><br>
+<span class="o">1</span>    <span class="cm">← 1 = koşul yanlış (başarısız)</span><br><br>
+<span class="p">$&gt; </span><span class="c">test $a -lt $b</span>    <span class="cm"># 12 &lt; 23? → doğru</span><br>
+<span class="p">$&gt; </span><span class="c">echo $?</span><br>
+<span class="o">0</span>    <span class="cm">← 0 = koşul doğru (başarılı)</span><br><br>
+<span class="p">$&gt; </span><span class="c">[ $a -gt $b ]</span>     <span class="cm"># köşeli parantez = test kısayolu</span><br>
+<span class="p">$&gt; </span><span class="c">echo $?</span><br>
+<span class="o">1</span>    <span class="cm">← 12 &gt; 23 yanlış</span>
+      </div>
+      <div class="run-wrap"><button class="run-btn" onclick="simRun('s1')">▶ Simüle et</button></div>
+      <div class="sim-out" id="s1">$ a=12; b=23
+$ test $a -eq $b   # 12 eşit 23?
+$ echo $?
+1   ← YANLIŞ (eşit değil)
+
+$ test $a -lt $b   # 12 küçük 23?
+$ echo $?
+0   ← DOĞRU (12 gerçekten 23'ten küçük)
+
+$ [ $a -gt $b ]    # 12 büyük 23?
+$ echo $?
+1   ← YANLIŞ</div>
+    </div>
+  </div>
+
+  <div class="example" id="ex2">
+    <div class="example-header" onclick="toggleEx('ex2')">
+      <div class="example-header-left">
+        <span class="diff-badge diff-mid">Orta</span>
+        <span class="example-title">Script: Sayı karşılaştırma — not hesaplama</span>
+      </div>
+      <div class="example-meta">~2 dk <span class="chevron">›</span></div>
+    </div>
+    <div class="example-body">
+      <p style="font-size:14px;color:var(--text2);margin-bottom:.75rem">Bir öğrencinin notunu okuyup geçti/kaldı kontrolü yapan script:</p>
+      <div class="script-file">
+        <div class="script-file-header">
+          <span class="script-file-name">not_kontrol.sh</span>
+          <span class="script-file-badge">bash script</span>
+        </div>
+        <div class="term-body">
+<span class="cm">#!/bin/bash</span><br>
+<span class="c">echo -n </span><span class="str">"Notunuzu girin: "</span><br>
+<span class="c">read not</span><br><br>
+<span class="kw">if</span><span class="c"> [ $not -ge 50 ]; </span><span class="kw">then</span><br>
+<span class="c">    echo </span><span class="str">"✓ Geçtiniz! Notunuz: $not"</span><br>
+<span class="kw">elif</span><span class="c"> [ $not -ge 40 ]; </span><span class="kw">then</span><br>
+<span class="c">    echo </span><span class="str">"⚠ Bütünleme hakkınız var (Not: $not)"</span><br>
+<span class="kw">else</span><br>
+<span class="c">    echo </span><span class="str">"✗ Kaldınız. Notunuz: $not"</span><br>
+<span class="kw">fi</span>
+        </div>
+      </div>
+      <div class="term-header"><div class="term-dots"><span></span><span></span><span></span></div><span class="term-lang">bash — çalıştırma</span></div>
+      <div class="term-body">
+<span class="p">$&gt; </span><span class="c">chmod +x not_kontrol.sh</span><br>
+<span class="p">$&gt; </span><span class="c">./not_kontrol.sh</span><br>
+<span class="o">Notunuzu girin: 65</span><br>
+<span class="o">✓ Geçtiniz! Notunuz: 65</span>
+      </div>
+      <div class="info-box success" style="margin-top:.75rem">
+        <div class="info-box-title">🌐 Gerçek Hayat: Otomasyon Sistemleri</div>
+        <p>Üniversite not sistemleri, maaş bordrosu hesaplama, yaş kontrolü gibi tüm sayısal karar mekanizmaları bu kalıba dayanır. Örneğin bir sunucu izleme scripti CPU kullanımı 90'ı geçince uyarı gönderir: <code style="color:var(--accent)">[ $cpu -gt 90 ]</code></p>
+      </div>
+      <div class="run-wrap"><button class="run-btn" onclick="simRun('s2')">▶ Simüle et</button></div>
+      <div class="sim-out" id="s2">$ ./not_kontrol.sh
+Notunuzu girin: 65
+✓ Geçtiniz! Notunuz: 65
+
+$ ./not_kontrol.sh
+Notunuzu girin: 43
+⚠ Bütünleme hakkınız var (Not: 43)
+
+$ ./not_kontrol.sh
+Notunuzu girin: 28
+✗ Kaldınız. Notunuz: 28</div>
+    </div>
+  </div>
+
+  <div class="example" id="ex3">
+    <div class="example-header" onclick="toggleEx('ex3')">
+      <div class="example-header-left">
+        <span class="diff-badge diff-hard">Zor</span>
+        <span class="example-title">Script: CPU kullanımı izleme</span>
+      </div>
+      <div class="example-meta">~3 dk <span class="chevron">›</span></div>
+    </div>
+    <div class="example-body">
+      <div class="script-file">
+        <div class="script-file-header">
+          <span class="script-file-name">cpu_izle.sh</span>
+          <span class="script-file-badge">bash script</span>
+        </div>
+        <div class="term-body">
+<span class="cm">#!/bin/bash</span><br>
+<span class="c">ESIK=80</span>   <span class="cm"># uyarı eşiği %80</span><br>
+<span class="c">CPU=$(top -bn1 | grep </span><span class="str">"Cpu(s)"</span><span class="c"> | awk </span><span class="str">'{print int($2)}'</span><span class="c">)</span><br><br>
+<span class="kw">if</span><span class="c"> [ $CPU -ge $ESIK ]; </span><span class="kw">then</span><br>
+<span class="c">    echo </span><span class="str">"⚠ UYARI: CPU kullanımı %$CPU (eşik: %$ESIK)"</span><br>
+<span class="c">    echo </span><span class="str">"$(date): CPU=$CPU%"</span><span class="c"> >> /var/log/cpu_uyari.log</span><br>
+<span class="kw">else</span><br>
+<span class="c">    echo </span><span class="str">"✓ CPU normal: %$CPU"</span><br>
+<span class="kw">fi</span>
+        </div>
+      </div>
+      <div class="info-box success" style="margin-top:.75rem">
+        <div class="info-box-title">🌐 Gerçek Hayat: DevOps & SRE</div>
+        <p>Nagios, Zabbix, Prometheus gibi izleme araçlarının alarm mantığı tam olarak bu kalıba dayanır. Cron job ile her 5 dakikada çalıştırılırsa gerçek bir sunucu izleme sistemi elde edilir: <code style="color:var(--accent)">*/5 * * * * /opt/cpu_izle.sh</code></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="next-row">
+    <button class="next-btn" onclick="goto(2)">Devam: String Operatörler →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SECTION 2 — STRING OPERATÖRLER
+══════════════════════════════════ -->
+<div class="sec" id="sec2">
+  <div class="section-num">03 String Operatörleri</div>
+  <h1 class="section-title">Metin Karşılaştırmak</h1>
+  <p class="section-intro">
+    Metin (string) karşılaştırmaları için <code style="color:var(--accent)">test</code> farklı operatörler kullanır. Sayısal operatörlerden ayrı tutmak önemlidir: metinler için <code style="color:var(--accent)">=</code> ve <code style="color:var(--accent)">!=</code>, sayılar için <code style="color:var(--accent)">-eq</code> ve <code style="color:var(--accent)">-ne</code>.
+  </p>
+
+  <table class="op-table">
+    <tr><th>Operatör</th><th>Anlamı</th><th>Örnek</th></tr>
+    <tr><td>=</td><td>String eşitliği</td><td>test "$ad" = "Ahmet"</td></tr>
+    <tr><td>!=</td><td>String eşitsizliği</td><td>test "$ad" != "Ali"</td></tr>
+    <tr><td>-z</td><td>String boş mu? (zero length)</td><td>test -z "$adres"</td></tr>
+    <tr><td>-n</td><td>String dolu mu? (non-zero)</td><td>test -n "$ad"</td></tr>
+  </table>
+
+  <div class="example open" id="ex4">
+    <div class="example-header" onclick="toggleEx('ex4')">
+      <div class="example-header-left">
+        <span class="diff-badge diff-easy">Basit</span>
+        <span class="example-title">Slayttaki örnekler — -z ve -n</span>
+      </div>
+      <div class="example-meta">~1 dk <span class="chevron">›</span></div>
+    </div>
+    <div class="example-body">
+      <p style="font-size:14px;color:var(--text2);margin-bottom:.75rem">Slayttaki örnekleri tek tek çalıştıralım ve neden o sonucu döndürdüğünü anlayalım:</p>
+      <div class="term-header"><div class="term-dots"><span></span><span></span><span></span></div><span class="term-lang">bash</span></div>
+      <div class="term-body">
+<span class="p">$&gt; </span><span class="c">name="Ahmet"</span><br><br>
+<span class="p">$&gt; </span><span class="c">test -z $name</span>      <span class="cm"># "Ahmet" boş mu?</span><br>
+<span class="p">$&gt; </span><span class="c">echo $?</span><br>
+<span class="o">1</span>   <span class="cm">← Hayır, boş değil → koşul YANLIŞ → 1</span><br><br>
+<span class="p">$&gt; </span><span class="c">test -n $name</span>      <span class="cm"># "Ahmet" dolu mu?</span><br>
+<span class="p">$&gt; </span><span class="c">echo $?</span><br>
+<span class="o">0</span>   <span class="cm">← Evet, dolu → koşul DOĞRU → 0</span><br><br>
+<span class="p">$&gt; </span><span class="c">test -z "$address"</span> <span class="cm"># address tanımsız → boş sayılır</span><br>
+<span class="p">$&gt; </span><span class="c">echo $?</span><br>
+<span class="o">0</span>   <span class="cm">← Evet, boş → koşul DOĞRU → 0</span><br><br>
+<span class="p">$&gt; </span><span class="c">test $name = "Ali"</span> <span class="cm"># "Ahmet" == "Ali"?</span><br>
+<span class="p">$&gt; </span><span class="c">echo $?</span><br>
+<span class="o">1</span>   <span class="cm">← Hayır → koşul YANLIŞ → 1</span>
+      </div>
+      <div class="info-box warn" style="margin-top:.75rem">
+        <div class="info-box-title">⚠️ Tırnak İşareti Önemli</div>
+        <p>Değişkenleri her zaman tırnak içinde kullanın: <code style="color:var(--accent3)">test -z "$adres"</code>. Tırnaksız kullanımda değişken boşsa <code style="color:var(--accent3)">test -z</code> argümansız kalır ve hata verir.</p>
+      </div>
+      <div class="run-wrap"><button class="run-btn" onclick="simRun('s4')">▶ Simüle et</button></div>
+      <div class="sim-out" id="s4">$ name="Ahmet"
+$ test -z $name   # Ahmet boş mu?
+$ echo $?
+1   ← Hayır (boş değil) → YANLIŞ
+
+$ test -n $name   # Ahmet dolu mu?
+$ echo $?
+0   ← Evet (dolu) → DOĞRU
+
+$ test -z "$address"  # address tanımsız
+$ echo $?
+0   ← Evet (boş) → DOĞRU
+
+$ test $name = "Ali"  # Ahmet == Ali?
+$ echo $?
+1   ← Hayır → YANLIŞ</div>
+    </div>
+  </div>
+
+  <div class="example" id="ex5">
+    <div class="example-header" onclick="toggleEx('ex5')">
+      <div class="example-header-left">
+        <span class="diff-badge diff-mid">Orta</span>
+        <span class="example-title">Script: Kullanıcı adı doğrulama</span>
+      </div>
+      <div class="example-meta">~2 dk <span class="chevron">›</span></div>
+    </div>
+    <div class="example-body">
+      <div class="script-file">
+        <div class="script-file-header">
+          <span class="script-file-name">giris_kontrol.sh</span>
+          <span class="script-file-badge">bash script</span>
+        </div>
+        <div class="term-body">
+<span class="cm">#!/bin/bash</span><br>
+<span class="c">echo -n </span><span class="str">"Kullanıcı adı: "</span><br>
+<span class="c">read kullanici</span><br><br>
+<span class="cm"># Boş girildi mi?</span><br>
+<span class="kw">if</span><span class="c"> [ -z "$kullanici" ]; </span><span class="kw">then</span><br>
+<span class="c">    echo </span><span class="str">"✗ Hata: Kullanıcı adı boş olamaz!"</span><br>
+<span class="c">    exit 1</span><br>
+<span class="kw">fi</span><br><br>
+<span class="cm"># Admin mi?</span><br>
+<span class="kw">if</span><span class="c"> [ "$kullanici" = "admin" ]; </span><span class="kw">then</span><br>
+<span class="c">    echo </span><span class="str">"✓ Yönetici paneline hoş geldiniz!"</span><br>
+<span class="kw">else</span><br>
+<span class="c">    echo </span><span class="str">"✓ Merhaba, $kullanici!"</span><br>
+<span class="kw">fi</span>
+        </div>
+      </div>
+      <div class="run-wrap"><button class="run-btn" onclick="simRun('s5')">▶ Simüle et</button></div>
+      <div class="sim-out" id="s5">$ ./giris_kontrol.sh
+Kullanıcı adı: 
+✗ Hata: Kullanıcı adı boş olamaz!
+
+$ ./giris_kontrol.sh
+Kullanıcı adı: admin
+✓ Yönetici paneline hoş geldiniz!
+
+$ ./giris_kontrol.sh
+Kullanıcı adı: iclal
+✓ Merhaba, iclal!</div>
+    </div>
+  </div>
+
+  <div class="next-row">
+    <button class="next-btn" onclick="goto(3)">Devam: Dosya Operatörleri →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SECTION 3 — DOSYA OPERATÖRLERI
+══════════════════════════════════ -->
+<div class="sec" id="sec3">
+  <div class="section-num">04 Dosya Operatörleri</div>
+  <h1 class="section-title">Dosya ve Dizin Kontrolü</h1>
+  <p class="section-intro">
+    Shell scriptlerinin en sık kullandığı test türü dosya kontrolüdür. Bir dosyayı işlemeden önce var olup olmadığını, okunabilir mi yazılabilir mi çalıştırılabilir mi olduğunu kontrol etmek iyi bir pratiktir.
+  </p>
+
+  <table class="op-table">
+    <tr><th>Operatör</th><th>Anlamı</th><th>Örnek</th></tr>
+    <tr><td>-f</td><td>Dosya var mı?</td><td>test -f "mydoc.doc"</td></tr>
+    <tr><td>-s</td><td>Dosya var ve boyutu > 0?</td><td>test -s "log.txt"</td></tr>
+    <tr><td>-d</td><td>Dizin var mı?</td><td>test -d "$HOME"</td></tr>
+    <tr><td>-r</td><td>Dosya okunabilir mi?</td><td>test -r "config.cfg"</td></tr>
+    <tr><td>-w</td><td>Dosya yazılabilir mi?</td><td>test -w "veri.db"</td></tr>
+    <tr><td>-x</td><td>Dosya çalıştırılabilir mi?</td><td>test -x "script.sh"</td></tr>
+  </table>
+
+  <div class="example open" id="ex6">
+    <div class="example-header" onclick="toggleEx('ex6')">
+      <div class="example-header-left">
+        <span class="diff-badge diff-easy">Basit</span>
+        <span class="example-title">Slayttaki dosya örnekleri</span>
+      </div>
+      <div class="example-meta">~1 dk <span class="chevron">›</span></div>
+    </div>
+    <div class="example-body">
+      <div class="term-header"><div class="term-dots"><span></span><span></span><span></span></div><span class="term-lang">bash</span></div>
+      <div class="term-body">
+<span class="p">$&gt; </span><span class="c">test -f "mydoc.doc"</span><br>
+<span class="p">$&gt; </span><span class="c">echo $?</span><br>
+<span class="o">0</span>   <span class="cm">← dosya var → DOĞRU</span><br><br>
+<span class="p">$&gt; </span><span class="c">test -r "mydoc.doc"</span>  <span class="cm"># okuma izni var mı?</span><br>
+<span class="p">$&gt; </span><span class="c">echo $?</span><br>
+<span class="o">0</span>   <span class="cm">← okuma izni var → DOĞRU</span><br><br>
+<span class="p">$&gt; </span><span class="c">test -d "$HOME"</span>       <span class="cm"># home dizini var mı?</span><br>
+<span class="p">$&gt; </span><span class="c">echo $?</span><br>
+<span class="o">0</span>   <span class="cm">← $HOME her zaman var → DOĞRU</span><br><br>
+<span class="p">$&gt; </span><span class="c">test -x "mydoc.doc"</span>  <span class="cm"># çalıştırılabilir mi?</span><br>
+<span class="p">$&gt; </span><span class="c">echo $?</span><br>
+<span class="o">1</span>   <span class="cm">← .doc çalıştırılamaz → YANLIŞ</span>
+      </div>
+      <div class="run-wrap"><button class="run-btn" onclick="simRun('s6')">▶ Simüle et</button></div>
+      <div class="sim-out" id="s6">$ test -f "mydoc.doc"
+$ echo $?
+0   ← dosya mevcut → DOĞRU
+
+$ test -r "mydoc.doc"
+$ echo $?
+0   ← okuma izni var → DOĞRU
+
+$ test -d "$HOME"
+$ echo $?
+0   ← home dizini var → DOĞRU
+
+$ test -x "mydoc.doc"
+$ echo $?
+1   ← çalıştırma izni yok → YANLIŞ</div>
+    </div>
+  </div>
+
+  <div class="example" id="ex7">
+    <div class="example-header" onclick="toggleEx('ex7')">
+      <div class="example-header-left">
+        <span class="diff-badge diff-mid">Orta</span>
+        <span class="example-title">Script: Güvenli dosya işleme</span>
+      </div>
+      <div class="example-meta">~2 dk <span class="chevron">›</span></div>
+    </div>
+    <div class="example-body">
+      <p style="font-size:14px;color:var(--text2);margin-bottom:.75rem">Bir dosyayı işlemeden önce tüm koşulları kontrol eden güvenli script:</p>
+      <div class="script-file">
+        <div class="script-file-header">
+          <span class="script-file-name">guvenli_oku.sh</span>
+          <span class="script-file-badge">bash script</span>
+        </div>
+        <div class="term-body">
+<span class="cm">#!/bin/bash</span><br>
+<span class="c">DOSYA=$1</span>   <span class="cm"># ilk argüman dosya yolu</span><br><br>
+<span class="kw">if</span><span class="c"> [ -z "$DOSYA" ]; </span><span class="kw">then</span><br>
+<span class="c">    echo </span><span class="str">"Kullanım: $0 &lt;dosya_adı&gt;"</span><br>
+<span class="c">    exit 1</span><br>
+<span class="kw">fi</span><br><br>
+<span class="kw">if</span><span class="c"> [ ! -f "$DOSYA" ]; </span><span class="kw">then</span><br>
+<span class="c">    echo </span><span class="str">"✗ Hata: '$DOSYA' bulunamadı!"</span><br>
+<span class="c">    exit 1</span><br>
+<span class="kw">fi</span><br><br>
+<span class="kw">if</span><span class="c"> [ ! -r "$DOSYA" ]; </span><span class="kw">then</span><br>
+<span class="c">    echo </span><span class="str">"✗ Hata: '$DOSYA' okunamıyor (izin yok)!"</span><br>
+<span class="c">    exit 1</span><br>
+<span class="kw">fi</span><br><br>
+<span class="c">echo </span><span class="str">"✓ Dosya okunuyor: $DOSYA"</span><br>
+<span class="c">cat "$DOSYA"</span>
+        </div>
+      </div>
+      <div class="run-wrap"><button class="run-btn" onclick="simRun('s7')">▶ Simüle et</button></div>
+      <div class="sim-out" id="s7">$ ./guvenli_oku.sh
+Kullanım: ./guvenli_oku.sh <dosya_adı>
+
+$ ./guvenli_oku.sh olmayan.txt
+✗ Hata: 'olmayan.txt' bulunamadı!
+
+$ ./guvenli_oku.sh /etc/passwd
+✓ Dosya okunuyor: /etc/passwd
+root:x:0:0:root:/root:/bin/bash
+...</div>
+    </div>
+  </div>
+
+  <div class="next-row">
+    <button class="next-btn" onclick="goto(4)">Devam: Mantıksal Operatörler & if →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SECTION 4 — MANTIKSAL & IF
+══════════════════════════════════ -->
+<div class="sec" id="sec4">
+  <div class="section-num">05 Mantıksal Operatörler & if</div>
+  <h1 class="section-title">Koşulları Birleştirmek ve if Yapısı</h1>
+  <p class="section-intro">
+    Birden fazla koşulu tek <code style="color:var(--accent)">test</code> içinde birleştirmek için mantıksal operatörler kullanılır. Bu operatörler, gerçek programlarda birçok koşulu tek seferde değerlendirmeyi sağlar.
+  </p>
+
+  <table class="op-table">
+    <tr><th>Operatör</th><th>Anlamı</th><th>Örnek</th></tr>
+    <tr><td>-a</td><td>Mantıksal VE (AND) — her ikisi de doğru olmalı</td><td>test -r dosya -a -w dosya</td></tr>
+    <tr><td>-o</td><td>Mantıksal VEYA (OR) — biri doğru olsa yeter</td><td>test -f dosya -o -d dosya</td></tr>
+    <tr><td>!</td><td>Mantıksal DEĞİL (NOT) — koşulu tersine çevirir</td><td>test ! -f dosya</td></tr>
+  </table>
+
+  <div class="example open" id="ex8">
+    <div class="example-header" onclick="toggleEx('ex8')">
+      <div class="example-header-left">
+        <span class="diff-badge diff-easy">Basit</span>
+        <span class="example-title">-a ile çoklu koşul — slayttaki örnek</span>
+      </div>
+      <div class="example-meta">~1 dk <span class="chevron">›</span></div>
+    </div>
+    <div class="example-body">
+      <p style="font-size:14px;color:var(--text2);margin-bottom:.75rem">Slayttaki örnek: bir dosyanın hem okunabilir hem yazılabilir olup olmadığını tek test ile kontrol etme.</p>
+      <div class="term-header"><div class="term-dots"><span></span><span></span><span></span></div><span class="term-lang">bash</span></div>
+      <div class="term-body">
+<span class="cm"># Hem okuma hem yazma izni var mı?</span><br>
+<span class="p">$&gt; </span><span class="c">test -r "mydoc.doc" -a -w "mydoc.doc"</span><br>
+<span class="p">$&gt; </span><span class="c">echo $?</span><br>
+<span class="o">0</span>   <span class="cm">← ikisi de var → DOĞRU</span><br><br>
+<span class="cm"># Dosya YOK mu? (! ile ters çevir)</span><br>
+<span class="p">$&gt; </span><span class="c">test ! -f "olmayan.txt"</span><br>
+<span class="p">$&gt; </span><span class="c">echo $?</span><br>
+<span class="o">0</span>   <span class="cm">← gerçekten yok → DOĞRU</span><br><br>
+<span class="cm"># Dosya veya dizin mi? (-o ile)</span><br>
+<span class="p">$&gt; </span><span class="c">test -f "/home" -o -d "/home"</span><br>
+<span class="p">$&gt; </span><span class="c">echo $?</span><br>
+<span class="o">0</span>   <span class="cm">← /home bir dizin → DOĞRU</span>
+      </div>
+      <div class="run-wrap"><button class="run-btn" onclick="simRun('s8')">▶ Simüle et</button></div>
+      <div class="sim-out" id="s8">$ test -r "mydoc.doc" -a -w "mydoc.doc"
+$ echo $?
+0   ← hem okunabilir hem yazılabilir → DOĞRU
+
+$ test ! -f "olmayan.txt"
+$ echo $?
+0   ← dosya gerçekten yok → DOĞRU
+
+$ test -f "/home" -o -d "/home"
+$ echo $?
+0   ← /home bir dizin → DOĞRU</div>
+    </div>
+  </div>
+
+  <div class="example" id="ex9">
+    <div class="example-header" onclick="toggleEx('ex9')">
+      <div class="example-header-left">
+        <span class="diff-badge diff-mid">Orta</span>
+        <span class="example-title">Slayttaki if örneği — who | grep ile kullanıcı kontrolü</span>
+      </div>
+      <div class="example-meta">~2 dk <span class="chevron">›</span></div>
+    </div>
+    <div class="example-body">
+      <p style="font-size:14px;color:var(--text2);margin-bottom:.75rem">Slayttaki örnek: sisteme giriş yapmış kullanıcıları listeleyen <code style="color:var(--accent)">who</code> çıktısını <code style="color:var(--accent)">grep</code> ile filtrele. <code style="color:var(--accent)">grep -s</code> sessiz modda çalışır; sadece çıkış kodu döndürür.</p>
+      <div class="script-file">
+        <div class="script-file-header">
+          <span class="script-file-name">kullanici_kontrol.sh</span>
+          <span class="script-file-badge">bash script — slayttaki örnek</span>
+        </div>
+        <div class="term-body">
+<span class="cm">#!/bin/bash</span><br>
+<span class="kw">if</span><span class="c"> who | grep -s ahmet &gt; /dev/null</span><br>
+<span class="kw">then</span><br>
+<span class="c">    echo </span><span class="str">"ahmet is logged in CE server"</span><br>
+<span class="kw">else</span><br>
+<span class="c">    echo </span><span class="str">"ahmet not available in CE server"</span><br>
+<span class="kw">fi</span>
+        </div>
+      </div>
+      <div class="info-box" style="margin-top:.75rem">
+        <div class="info-box-title">🔍 Nasıl Çalışır?</div>
+        <p><code style="color:var(--accent)">who</code> → sisteme giriş yapmış kullanıcıları listeler.<br>
+        <code style="color:var(--accent)">| grep -s ahmet</code> → çıktı "ahmet" içeriyorsa 0, içermiyorsa 1 döndürür.<br>
+        <code style="color:var(--accent)">&gt; /dev/null</code> → grep çıktısı ekrana değil çöp kutusuna gider.<br>
+        <code style="color:var(--accent)">if</code> → grep'in çıkış koduna bakar: 0 ise then, değilse else çalışır.</p>
+      </div>
+      <div class="run-wrap"><button class="run-btn" onclick="simRun('s9')">▶ Simüle et</button></div>
+      <div class="sim-out" id="s9">$ who
+ahmet    pts/0   2024-01-15 09:23
+iclal    pts/1   2024-01-15 10:45
+
+$ ./kullanici_kontrol.sh
+ahmet is logged in CE server
+
+--- ahmet çıkış yaptıktan sonra ---
+$ ./kullanici_kontrol.sh
+ahmet not available in CE server</div>
+    </div>
+  </div>
+
+  <div class="example" id="ex10">
+    <div class="example-header" onclick="toggleEx('ex10')">
+      <div class="example-header-left">
+        <span class="diff-badge diff-hard">Zor</span>
+        <span class="example-title">Script: Tam sistem kontrol scripti</span>
+      </div>
+      <div class="example-meta">~4 dk <span class="chevron">›</span></div>
+    </div>
+    <div class="example-body">
+      <p style="font-size:14px;color:var(--text2);margin-bottom:.75rem">Tüm operatör türlerini birleştiren kapsamlı bir sistem sağlık kontrol scripti:</p>
+      <div class="script-file">
+        <div class="script-file-header">
+          <span class="script-file-name">sistem_saglik.sh</span>
+          <span class="script-file-badge">bash script</span>
+        </div>
+        <div class="term-body">
+<span class="cm">#!/bin/bash</span><br>
+<span class="c">echo </span><span class="str">"=== Sistem Sağlık Kontrolü ==="</span><br><br>
+<span class="cm"># 1. Disk kullanımı (sayısal)</span><br>
+<span class="c">DISK=$(df / | tail -1 | awk </span><span class="str">'{print int($5)}'</span><span class="c">)</span><br>
+<span class="kw">if</span><span class="c"> [ $DISK -ge 90 ]; </span><span class="kw">then</span><br>
+<span class="c">    echo </span><span class="str">"✗ DİSK: %$DISK doluluk — KRİTİK!"</span><br>
+<span class="kw">else</span><br>
+<span class="c">    echo </span><span class="str">"✓ DİSK: %$DISK doluluk — Normal"</span><br>
+<span class="kw">fi</span><br><br>
+<span class="cm"># 2. Log dosyası (dosya + boyut)</span><br>
+<span class="kw">if</span><span class="c"> [ -f "/var/log/syslog" -a -s "/var/log/syslog" ]; </span><span class="kw">then</span><br>
+<span class="c">    echo </span><span class="str">"✓ SYSLOG: Mevcut ve dolu"</span><br>
+<span class="kw">else</span><br>
+<span class="c">    echo </span><span class="str">"⚠ SYSLOG: Bulunamadı veya boş"</span><br>
+<span class="kw">fi</span><br><br>
+<span class="cm"># 3. Root mu? (string)</span><br>
+<span class="kw">if</span><span class="c"> [ "$USER" = "root" ]; </span><span class="kw">then</span><br>
+<span class="c">    echo </span><span class="str">"⚠ Uyarı: root olarak çalışıyorsunuz!"</span><br>
+<span class="kw">else</span><br>
+<span class="c">    echo </span><span class="str">"✓ Kullanıcı: $USER"</span><br>
+<span class="kw">fi</span><br><br>
+<span class="c">echo </span><span class="str">"=== Kontrol tamamlandı ==="</span>
+        </div>
+      </div>
+      <div class="info-box success" style="margin-top:.75rem">
+        <div class="info-box-title">🌐 Gerçek Hayat: SysAdmin Araçları</div>
+        <p>Bu tür scriptler cron ile otomatikleştirilir. Büyük sistemlerde Ansible, Puppet gibi araçlar da benzer mantığa dayanır. Aynı script e-posta bildirimi eklenirse tam bir izleme aracına dönüşür.</p>
+      </div>
+      <div class="run-wrap"><button class="run-btn" onclick="simRun('s10')">▶ Simüle et</button></div>
+      <div class="sim-out" id="s10">=== Sistem Sağlık Kontrolü ===
+✓ DİSK: %43 doluluk — Normal
+✓ SYSLOG: Mevcut ve dolu
+✓ Kullanıcı: iclal
+=== Kontrol tamamlandı ===</div>
+    </div>
+  </div>
+
+  <div class="next-row">
+    <button class="next-btn" onclick="goto(5)">Devam: Özet & Sınav →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SECTION 5 — ÖZET & SINAV
+══════════════════════════════════ -->
+<div class="sec" id="sec5">
+  <div class="section-num">06 Özet & Sınav</div>
+  <h1 class="section-title">Cheat Sheet & Bilgi Sınaması</h1>
+
+  <div class="summary-grid">
+    <div class="sum-card num"><span class="sum-code">-eq / -ne</span><span class="sum-desc">Eşit / eşit değil (sayısal)</span></div>
+    <div class="sum-card num"><span class="sum-code">-gt / -lt</span><span class="sum-desc">Büyüktür / küçüktür</span></div>
+    <div class="sum-card num"><span class="sum-code">-ge / -le</span><span class="sum-desc">Büyük-eşit / küçük-eşit</span></div>
+    <div class="sum-card"><span class="sum-code">= / !=</span><span class="sum-desc">String eşit / eşit değil</span></div>
+    <div class="sum-card"><span class="sum-code">-z / -n</span><span class="sum-desc">String boş mu / dolu mu?</span></div>
+    <div class="sum-card tip"><span class="sum-code">-f / -s</span><span class="sum-desc">Dosya var mı / boyutu > 0?</span></div>
+    <div class="sum-card tip"><span class="sum-code">-d</span><span class="sum-desc">Dizin var mı?</span></div>
+    <div class="sum-card tip"><span class="sum-code">-r / -w / -x</span><span class="sum-desc">Oku / yaz / çalıştır izni?</span></div>
+    <div class="sum-card"><span class="sum-code">-a / -o / !</span><span class="sum-desc">VE / VEYA / DEĞİL</span></div>
+    <div class="sum-card warn"><span class="sum-code">$?</span><span class="sum-desc">Son komutun çıkış kodu: 0=OK, 1=hata</span></div>
+    <div class="sum-card warn"><span class="sum-code">[ koşul ]</span><span class="sum-desc">test komutunun kısayolu</span></div>
+    <div class="sum-card"><span class="sum-code">> /dev/null</span><span class="sum-desc">Çıktıyı sust; sadece çıkış kodu kalsın</span></div>
+  </div>
+
+  <hr class="divider">
+  <h2 style="font-size:18px;font-weight:500;margin-bottom:1.25rem;color:var(--text)">🎯 Bilgi Sınaması</h2>
+  <div id="quizWrap">
+    <div class="progress-bar-wrap"><div class="progress-bar" id="qProgress" style="width:0%"></div></div>
+    <div id="qBox"></div>
+  </div>
+
+  <div style="margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border)">
+    <p style="font-size:12px;color:var(--text3)">Kaynak: Chapter Eight — Basic Shell Scripting (Slide 47+) · Hazırlayan: İclal Gül</p>
+  </div>
+</div>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-info">Hafta 8 · test Komutu · Sayısal · String · Dosya Operatörleri · if Yapısı</div>
+  <div class="footer-actions">
+    <button class="foot-btn" onclick="goto(0)">↩ Başa Dön</button>
+    <button class="foot-btn" onclick="window.print()">🖨 Yazdır / PDF</button>
+  </div>
+</footer>
+
+<script>
+/* ── TIMER ── */
+let timerSec=900, timerRunning=false, timerInterval=null;
+function fmt(s){ return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); }
+function toggleTimer(){
+  if(timerRunning){ clearInterval(timerInterval); timerRunning=false; document.getElementById('timerStartBtn').textContent='▶ Başlat'; }
+  else{ timerInterval=setInterval(()=>{ if(timerSec>0){ timerSec--; document.getElementById('timerDisplay').textContent=fmt(timerSec); } else clearInterval(timerInterval); },1000); timerRunning=true; document.getElementById('timerStartBtn').textContent='⏸ Duraklat'; }
+}
+function resetTimer(){ clearInterval(timerInterval); timerRunning=false; timerSec=900; document.getElementById('timerDisplay').textContent='15:00'; document.getElementById('timerStartBtn').textContent='▶ Başlat'; }
+
+/* ── NAV ── */
+let currentSec=0;
+const visited=new Set([0]);
+function goto(i){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  document.getElementById('sec'+i).classList.add('active');
+  visited.add(i); currentSec=i;
+  document.querySelectorAll('.nav-pill').forEach((p,idx)=>{
+    p.classList.remove('active','done');
+    if(idx===i) p.classList.add('active');
+    else if(visited.has(idx)) p.classList.add('done');
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(i===5) initQuiz();
+}
+
+function toggleEx(id){ document.getElementById(id).classList.toggle('open'); }
+function toggleDers(id){ document.getElementById(id).classList.toggle('open'); }
+function simRun(id){ document.getElementById(id).classList.add('show'); }
+
+/* ── QUIZ ── */
+const questions=[
+  { q:"test $a -eq $b komutunda -eq ne anlama gelir?", opts:["Büyüktür","Küçük veya eşit","Eşit mi? (sayısal)","String eşitliği"], ans:2, exp:"-eq 'equal' kelimesinden gelir ve sayısal eşitliği kontrol eder. String için = kullanılır." },
+  { q:"echo $? komutu 0 döndürdüğünde ne anlama gelir?", opts:["Hata oluştu","Önceki komut başarıyla çalıştı","Değişken boş","Dosya bulunamadı"], ans:1, exp:"Unix geleneğinde 0 = başarı, 0 dışı = hata. test komutunda 0, koşulun DOĞRU olduğu anlamına gelir." },
+  { q:"test -z \"$degisken\" ne zaman 0 döndürür?", opts:["Değişken dolu olduğunda","Değişken sayı içerdiğinde","Değişken boş veya tanımsız olduğunda","Her zaman"], ans:2, exp:"-z 'zero length' anlamına gelir. String boşsa koşul doğrudur (0 döner). Dolu ise 1 döner." },
+  { q:"test -n \"$isim\" ne zaman 0 döndürür?", opts:["İsim boş olduğunda","İsim dolu (non-zero length) olduğunda","İsim sayı içerdiğinde","Hiçbir zaman"], ans:1, exp:"-n 'non-zero' anlamına gelir. String doluysa (en az bir karakter) koşul doğrudur." },
+  { q:"test -d \"/home\" ne anlama gelir?", opts:["/home dosyası okunabilir mi?","/home dizini var mı?","/home çalıştırılabilir mi?","/home boş mu?"], ans:1, exp:"-d 'directory' anlamına gelir. Belirtilen yolda bir dizin olup olmadığını kontrol eder." },
+  { q:"test -r dosya -a -w dosya komutunda -a ne anlama gelir?", opts:["Mantıksal VEYA","Dosya boyutu","Mantıksal VE","Dosya var mı?"], ans:2, exp:"-a 'AND' (ve) anlamına gelir. Her iki koşul da doğruysa test 0 döndürür." },
+  { q:"[ $x -gt 10 ] ifadesi neyin kısaltmasıdır?", opts:["grep $x > 10","test $x -gt 10","if $x > 10","echo $x -gt 10"], ans:1, exp:"[ ] köşeli parantez, test komutunun tam kısaltmasıdır. İkisi birebir aynı işi yapar." },
+  { q:"grep çıktısı /dev/null'a yönlendirildiğinde ne olur?", opts:["Program çöker","Çıktı dosyaya kaydedilir","Çıktı ekranda görünmez, sadece çıkış kodu kalır","grep devre dışı kalır"], ans:2, exp:"/dev/null Linux'un çöp kutusudur. Yönlendirilen her şey yok olur. Sadece $? değeri kalır; bu sayede sessiz koşul kontrolü yapılır." },
+  { q:"if who | grep -s ahmet > /dev/null ifadesinde grep hangi duumda 0 döndürür?", opts:["who komutu hata verirse","ahmet sisteme giriş yapmışsa","ahmet sisteme giriş yapmamışsa","Her zaman"], ans:1, exp:"grep, aradığı metni bulduğunda 0 (başarı) döndürür. 'ahmet' who çıktısında varsa grep onu bulur ve if then bloğu çalışır." }
+];
+
+let qIdx=0, qScore=0, qAnswered=false;
+function initQuiz(){ qIdx=0; qScore=0; qAnswered=false; renderQ(); }
+
+function renderQ(){
+  const q=questions[qIdx];
+  document.getElementById('qProgress').style.width=(qIdx/questions.length*100)+'%';
+  let html=`<div class="quiz-counter">Soru ${qIdx+1} / ${questions.length}</div>
+  <div class="quiz-q">${q.q}</div>
+  <div class="quiz-opts">`;
+  q.opts.forEach((o,i)=>{ html+=`<button class="qopt" id="qo${i}" onclick="pickQ(${i})">${o}</button>`; });
+  html+=`</div><div class="q-feedback" id="qfb"></div>
+  <div class="quiz-nav">
+    <button class="q-nav-btn" onclick="prevQ()" ${qIdx===0?'disabled':''}>← Geri</button>
+    <span class="score-txt">Skor: ${qScore} / ${questions.length}</span>
+    <button class="q-nav-btn" onclick="nextQ()" ${qIdx===questions.length-1?'disabled':''}>İleri →</button>
+  </div>`;
+  document.getElementById('qBox').innerHTML=html;
+  qAnswered=false;
+}
+
+function pickQ(i){
+  if(qAnswered) return;
+  qAnswered=true;
+  const q=questions[qIdx];
+  document.querySelectorAll('.qopt').forEach(b=>b.disabled=true);
+  const btn=document.getElementById('qo'+i);
+  const fb=document.getElementById('qfb');
+  if(i===q.ans){ btn.classList.add('correct'); qScore++; fb.className='q-feedback ok'; fb.textContent='✓ '+q.exp; }
+  else{ btn.classList.add('wrong'); document.getElementById('qo'+q.ans).classList.add('correct'); fb.className='q-feedback no'; fb.textContent='✗ Yanlış. '+q.exp; }
+  document.querySelector('.score-txt').textContent='Skor: '+qScore+' / '+questions.length;
+}
+
+function nextQ(){ if(qIdx<questions.length-1){ qIdx++; renderQ(); } }
+function prevQ(){ if(qIdx>0){ qIdx--; renderQ(); } }
+</script>
+</body>
+</html>
