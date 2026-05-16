@@ -45,6 +45,10 @@ Bu çalışma, Bash'in dizi yapısını, değişken kalıtımını ve komut grup
 <Dokümana erişmek için>
 https://icloolg.github.io/acik-kaynak-isletim-sistemleri-shell-operators/anlatim3/
 
+### Anlatım 4: Temel Kabuk Programlama — eval Komutu · tee Komutu 
+<Dokümana erişmek için>
+https://icloolg.github.io/acik-kaynak-isletim-sistemleri-shell-operators/anlatim4/
+
 Bu çalışma, Bash'te koşullu ifade oluşturmayı, test komutunun tüm operatörlerini ve if yapısıyla birlikte kullanımını öğretmeyi amaçlamaktadır.
 
 ---
