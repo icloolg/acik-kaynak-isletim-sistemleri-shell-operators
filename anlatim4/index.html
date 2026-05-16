@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bash: eval · tee Komutları</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0f1117;--surface:#161b27;--surface2:#1e2535;--border:#2a3347;
+  --accent:#4f8ef7;--accent2:#38c9a0;--accent3:#f7c948;--accent4:#e26c6c;
+  --text:#e8eaf0;--text2:#8a93a8;--text3:#5a6480;
+  --mono:'JetBrains Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+  --radius:10px;--radius-lg:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
+
+/* ── HEADER ── */
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;gap:1rem;flex-wrap:wrap;}
+.header-left{display:flex;flex-direction:column;gap:2px;}
+.course-label{font-size:11px;font-weight:500;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;}
+.header-title{font-size:15px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px;}
+.dot{color:var(--text3);}
+.timer-box{display:flex;flex-direction:column;align-items:center;gap:6px;}
+.timer-label{font-size:11px;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;}
+.timer-display{font-family:var(--mono);font-size:22px;font-weight:600;color:var(--accent3);letter-spacing:.05em;}
+.timer-controls{display:flex;gap:6px;}
+.t-btn{padding:4px 12px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text2);font-size:12px;cursor:pointer;font-family:var(--sans);transition:all .15s;}
+.t-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+/* ── META & NAV ── */
+.meta-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:.6rem 2rem;display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;}
+.meta-item{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:5px;}
+.meta-item strong{color:var(--text);}
+.nav-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:.75rem 2rem;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.nav-pill{display:flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:13px;cursor:pointer;font-family:var(--sans);transition:all .2s;}
+.nav-pill:hover{border-color:var(--accent);color:var(--accent);}
+.nav-pill.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500;}
+.nav-pill.done{border-color:var(--accent2);color:var(--accent2);}
+.nav-pill .n{width:18px;height:18px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;}
+.nav-pill.active .n{background:rgba(255,255,255,.25);}
+.nav-pill.done .n{background:var(--accent2);color:#052e1e;}
+
+/* ── MAIN ── */
+main{flex:1;max-width:860px;width:100%;margin:0 auto;padding:2rem 1.5rem 4rem;}
+.section-num{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--accent);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.4rem;}
+.section-title{font-size:26px;font-weight:600;color:var(--text);margin-bottom:1.5rem;line-height:1.2;}
+.section-intro{font-size:15px;color:var(--text2);line-height:1.7;margin-bottom:1.5rem;}
+
+/* ── KOMUT KARTI (büyük açıklama kartı) ── */
+.cmd-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1.5rem;position:relative;overflow:hidden;}
+.cmd-card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:var(--accent);}
+.cmd-card.tee-card::before{background:var(--accent2);}
+.cmd-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;}
+.cmd-name{font-family:var(--mono);font-size:28px;font-weight:600;color:var(--accent);}
+.cmd-card.tee-card .cmd-name{color:var(--accent2);}
+.cmd-format{font-family:var(--mono);font-size:13px;color:var(--text3);background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:.4rem .8rem;align-self:flex-start;}
+.cmd-desc{font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:1rem;}
+.cmd-tags{display:flex;gap:6px;flex-wrap:wrap;}
+.cmd-tag{font-size:11px;font-weight:500;padding:2px 10px;border-radius:999px;border:1px solid;}
+.tag-blue{color:var(--accent);border-color:rgba(79,142,247,.35);background:rgba(79,142,247,.08);}
+.tag-green{color:var(--accent2);border-color:rgba(56,201,160,.35);background:rgba(56,201,160,.08);}
+.tag-amber{color:var(--accent3);border-color:rgba(247,201,72,.35);background:rgba(247,201,72,.08);}
+.cmd-flags{margin-top:1rem;display:grid;grid-template-columns:auto 1fr;gap:.4rem 1rem;align-items:baseline;}
+.cmd-flag{font-family:var(--mono);font-size:13px;color:var(--accent3);font-weight:600;}
+.cmd-flag-desc{font-size:13px;color:var(--text2);}
+
+/* ── AKIŞ DİYAGRAMI ── */
+.flow-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;margin:1rem 0;}
+.flow-label{font-size:11px;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:.75rem;}
+.flow{display:flex;align-items:center;gap:0;flex-wrap:wrap;row-gap:.5rem;}
+.flow-box{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.5rem .9rem;font-family:var(--mono);font-size:12px;color:var(--text);text-align:center;min-width:90px;}
+.flow-box.hi{border-color:var(--accent);color:var(--accent);background:rgba(79,142,247,.08);}
+.flow-box.hi2{border-color:var(--accent2);color:var(--accent2);background:rgba(56,201,160,.08);}
+.flow-box.hi3{border-color:var(--accent3);color:var(--accent3);background:rgba(247,201,72,.08);}
+.flow-box.hi4{border-color:var(--accent4);color:var(--accent4);background:rgba(226,108,108,.08);}
+.flow-lbl{font-size:10px;color:var(--text3);margin-top:3px;font-family:var(--sans);}
+.flow-arr{padding:0 .35rem;color:var(--text3);font-size:16px;}
+.tee-split{display:flex;flex-direction:column;gap:.4rem;}
+
+/* ── INFO BOX ── */
+.info-box{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:var(--radius);padding:1rem 1.25rem;margin:1rem 0;}
+.info-box.warn{border-left-color:var(--accent3);}
+.info-box.success{border-left-color:var(--accent2);}
+.info-box.danger{border-left-color:var(--accent4);}
+.info-box-title{font-size:12px;font-weight:600;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:.5rem;}
+.info-box p{font-size:14px;color:var(--text2);line-height:1.65;margin-bottom:.4rem;}
+.info-box p:last-child{margin-bottom:0;}
+
+/* ── EXAMPLE ── */
+.example{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:1rem;overflow:hidden;}
+.example-header{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1.25rem;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;transition:background .15s;}
+.example-header:hover{background:var(--surface2);}
+.example-header-left{display:flex;align-items:center;gap:.75rem;}
+.diff-badge{padding:2px 10px;border-radius:999px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;}
+.diff-easy{background:rgba(56,201,160,.15);color:var(--accent2);border:1px solid rgba(56,201,160,.3);}
+.diff-mid{background:rgba(247,201,72,.12);color:var(--accent3);border:1px solid rgba(247,201,72,.3);}
+.diff-hard{background:rgba(226,108,108,.12);color:var(--accent4);border:1px solid rgba(226,108,108,.3);}
+.example-title{font-size:14px;font-weight:500;color:var(--text);}
+.example-meta{font-size:12px;color:var(--text3);}
+.chevron{font-size:14px;color:var(--text3);transition:transform .2s;}
+.example.open .chevron{transform:rotate(90deg);}
+.example-body{display:none;padding:1.25rem;}
+.example.open .example-body{display:block;}
+
+/* ── TERMINAL ── */
+.term-header{display:flex;align-items:center;justify-content:space-between;background:#0a0d14;border-radius:var(--radius) var(--radius) 0 0;padding:.5rem 1rem;border:1px solid #1e2535;border-bottom:none;}
+.term-dots{display:flex;gap:6px;}
+.term-dots span{width:10px;height:10px;border-radius:50%;}
+.term-dots span:nth-child(1){background:#e26c6c;}
+.term-dots span:nth-child(2){background:#f7c948;}
+.term-dots span:nth-child(3){background:#38c9a0;}
+.term-lang{font-size:11px;color:var(--text3);font-family:var(--mono);}
+.term-body{background:#080b12;border:1px solid #1e2535;border-radius:0 0 var(--radius) var(--radius);padding:1rem 1.25rem;font-family:var(--mono);font-size:13px;line-height:1.9;overflow-x:auto;}
+.p{color:#4ade80;}.c{color:#e8eaf0;}.o{color:#94a3b8;}.cm{color:#4a5568;}.kw{color:#c084fc;}.str{color:var(--accent3);}.err-c{color:var(--accent4);}
+
+/* ── RUN / SIM ── */
+.run-wrap{display:flex;justify-content:flex-end;margin-top:.75rem;}
+.run-btn{padding:6px 16px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text2);font-size:12px;font-family:var(--sans);cursor:pointer;transition:all .15s;}
+.run-btn:hover{border-color:var(--accent2);color:var(--accent2);}
+.sim-out{display:none;margin-top:.75rem;background:#06080e;border:1px solid #1e2535;border-radius:var(--radius);padding:.75rem 1rem;font-family:var(--mono);font-size:13px;line-height:1.7;color:#4ade80;white-space:pre;}
+.sim-out.show{display:block;}
+
+/* ── SCRIPT DOSYASI ── */
+.script-file{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin:1rem 0;}
+.script-file-header{display:flex;align-items:center;gap:.6rem;padding:.6rem 1rem;background:#0d1018;border-bottom:1px solid var(--border);}
+.script-file-name{font-family:var(--mono);font-size:12px;color:var(--accent2);}
+.script-file-badge{font-size:10px;padding:2px 8px;border-radius:999px;background:rgba(56,201,160,.1);color:var(--accent2);border:1px solid rgba(56,201,160,.2);}
+
+/* ── DERS NOTU ── */
+.ders-notu{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin:1.5rem 0;}
+.ders-notu-header{display:flex;align-items:center;justify-content:space-between;padding:.85rem 1.25rem;background:var(--surface2);border-bottom:1px solid var(--border);cursor:pointer;user-select:none;}
+.ders-notu-header-left{display:flex;align-items:center;gap:.6rem;font-size:14px;font-weight:500;color:var(--accent);}
+.ders-notu-body{display:none;padding:1.25rem;}
+.ders-notu.open .ders-notu-body{display:block;}
+.ders-notu.open .dn-chevron{transform:rotate(90deg);}
+.dn-chevron{font-size:14px;color:var(--text3);transition:transform .2s;}
+.dn-step{display:flex;gap:.75rem;margin-bottom:1rem;}
+.dn-step:last-child{margin-bottom:0;}
+.dn-num{width:24px;height:24px;min-width:24px;border-radius:50%;background:rgba(79,142,247,.15);border:1px solid rgba(79,142,247,.3);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--accent);margin-top:1px;}
+.dn-content h4{font-size:14px;font-weight:500;color:var(--text);margin-bottom:.3rem;}
+.dn-content p{font-size:13px;color:var(--text2);line-height:1.65;}
+
+/* ── SUMMARY ── */
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:.75rem;margin:1.5rem 0;}
+.sum-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;}
+.sum-code{font-family:var(--mono);font-size:13px;color:var(--accent);margin-bottom:.5rem;display:block;}
+.sum-desc{font-size:12px;color:var(--text2);line-height:1.5;}
+.sum-card.warn .sum-code{color:var(--accent4);}
+.sum-card.tip .sum-code{color:var(--accent2);}
+.sum-card.num .sum-code{color:var(--accent3);}
+
+/* ── QUIZ ── */
+.progress-bar-wrap{height:3px;background:var(--border);border-radius:99px;margin-bottom:1.5rem;overflow:hidden;}
+.progress-bar{height:100%;background:var(--accent);border-radius:99px;transition:width .3s;}
+.quiz-counter{font-size:12px;color:var(--text3);margin-bottom:.5rem;}
+.quiz-q{font-size:15px;font-weight:500;color:var(--text);margin-bottom:1rem;line-height:1.5;}
+.quiz-opts{display:flex;flex-direction:column;gap:8px;}
+.qopt{padding:10px 16px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text);font-size:14px;text-align:left;cursor:pointer;font-family:var(--sans);transition:all .15s;}
+.qopt:hover:not(:disabled){border-color:var(--accent);color:var(--accent);}
+.qopt.correct{background:rgba(56,201,160,.1);border-color:var(--accent2);color:var(--accent2);}
+.qopt.wrong{background:rgba(226,108,108,.1);border-color:var(--accent4);color:var(--accent4);}
+.qopt:disabled{cursor:default;}
+.q-feedback{margin-top:.75rem;padding:.75rem 1rem;border-radius:8px;font-size:13px;line-height:1.5;display:none;}
+.q-feedback.ok{background:rgba(56,201,160,.08);border:1px solid rgba(56,201,160,.25);color:#7ee8c8;display:block;}
+.q-feedback.no{background:rgba(226,108,108,.08);border:1px solid rgba(226,108,108,.25);color:#f0a0a0;display:block;}
+.quiz-nav{display:flex;justify-content:space-between;align-items:center;margin-top:1.5rem;}
+.q-nav-btn{padding:8px 18px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text2);font-size:13px;font-family:var(--sans);cursor:pointer;transition:all .15s;}
+.q-nav-btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent);}
+.q-nav-btn:disabled{opacity:.35;cursor:default;}
+.score-txt{font-size:13px;color:var(--text3);}
+
+.divider{border:none;border-top:1px solid var(--border);margin:2rem 0;}
+.next-row{display:flex;justify-content:flex-end;margin-top:2rem;}
+.next-btn{padding:10px 24px;border:1px solid var(--accent);border-radius:8px;background:transparent;color:var(--accent);font-size:14px;font-family:var(--sans);cursor:pointer;transition:all .15s;}
+.next-btn:hover{background:var(--accent);color:#fff;}
+
+footer{background:var(--surface);border-top:1px solid var(--border);padding:1.25rem 2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;}
+.footer-info{font-size:12px;color:var(--text3);}
+.footer-actions{display:flex;gap:8px;}
+.foot-btn{padding:6px 14px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--text2);font-size:12px;cursor:pointer;font-family:var(--sans);transition:all .15s;}
+.foot-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+.sec{display:none;}.sec.active{display:block;}
+@media(max-width:600px){header{padding:.75rem 1rem;}main{padding:1.25rem 1rem 3rem;}.flow{flex-direction:column;align-items:flex-start;}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-left">
+    <span class="course-label">Açık Kaynak Kodlu İşletim Sistemleri ve Programlama</span>
+    <div class="header-title">
+      Temel Kabuk Programlama <span class="dot">·</span>
+      <span style="color:var(--text2);font-weight:400">eval · tee Komutları</span>
+    </div>
+  </div>
+  <div class="timer-box">
+    <span class="timer-label">Süre</span>
+    <div class="timer-display" id="timerDisplay">15:00</div>
+    <div class="timer-controls">
+      <button class="t-btn" id="timerStartBtn" onclick="toggleTimer()">▶ Başlat</button>
+      <button class="t-btn" onclick="resetTimer()">↺ Sıfırla</button>
+    </div>
+  </div>
+</header>
+
+<div class="meta-bar">
+  <div class="meta-item">🖥 <strong>Bölüm 8</strong> Basic Shell Scripting</div>
+  <div class="meta-item">⏱ <strong>15 dakika</strong></div>
+  <div class="meta-item">📚 <strong>5 bölüm</strong> · 8 soru</div>
+  <div class="meta-item">📄 Slide 66–67 · 83</div>
+</div>
+
+<nav class="nav-bar">
+  <button class="nav-pill active" onclick="goto(0)" id="pill0"><span class="n">1</span>Giriş</button>
+  <button class="nav-pill" onclick="goto(1)" id="pill1"><span class="n">2</span>eval Temelleri</button>
+  <button class="nav-pill" onclick="goto(2)" id="pill2"><span class="n">3</span>eval İleri</button>
+  <button class="nav-pill" onclick="goto(3)" id="pill3"><span class="n">4</span>tee Komutu</button>
+  <button class="nav-pill" onclick="goto(4)" id="pill4"><span class="n">5</span>Özet & Sınav</button>
+</nav>
+
+<main>
+
+<!-- ══════════════════════════════════════
+     SEC 0  GİRİŞ
+══════════════════════════════════════ -->
+<div class="sec active" id="sec0">
+  <div class="section-num">01 Giriş</div>
+  <h1 class="section-title">eval ve tee: Shell'in Gizli Güçleri</h1>
+  <p class="section-intro">
+    Bu derste iki özel kabuk komutunu derinlemesiyle inceliyoruz. <strong>eval</strong>, bir komut satırını iki kez tarayarak değişken içindeki pipe ve yönlendirme gibi özel karakterleri aktif hale getirir. <strong>tee</strong> ise bir veriyi hem ekrana hem dosyaya aynı anda yazarak loglama ve zincirleme işlemlerde çok işe yarar.
+  </p>
+
+  <!-- iki büyük komut tanıtım kartı -->
+  <div class="cmd-card">
+    <div class="cmd-card-top">
+      <div>
+        <div class="cmd-name">eval</div>
+        <div style="font-size:13px;color:var(--text3);margin-top:.25rem;">Slide 66–67</div>
+      </div>
+      <div class="cmd-format">eval komut-satırı</div>
+    </div>
+    <p class="cmd-desc">
+      Shell normalde bir komut satırını soldan sağa <strong>tek seferinde</strong> okur: önce pipe ve yönlendirme operatörlerini saptar, sonra değişkenleri açar. <code style="color:var(--accent)">eval</code> bu sırayı tersine çevirir: önce değişkeni açar, ardından oluşan satırı <strong>sanki yeni yazılmış bir komutmuş gibi yeniden çalıştırır</strong>. Bu sayede değişken içindeki <code style="color:var(--accent)">|</code>, <code style="color:var(--accent)">&gt;</code>, <code style="color:var(--accent)">;</code> ve <code style="color:var(--accent)">&amp;</code> karakterleri aktif hale gelir.
+    </p>
+    <div class="cmd-tags">
+      <span class="cmd-tag tag-blue">İki kez tarama</span>
+      <span class="cmd-tag tag-amber">Dinamik komut üretme</span>
+      <span class="cmd-tag tag-blue">Değişken içi özel karakter</span>
+    </div>
+  </div>
+
+  <div class="cmd-card tee-card">
+    <div class="cmd-card-top">
+      <div>
+        <div class="cmd-name">tee</div>
+        <div style="font-size:13px;color:var(--text3);margin-top:.25rem;">Slide 83</div>
+      </div>
+      <div class="cmd-format">komut | tee [seçenekler] dosya</div>
+    </div>
+    <p class="cmd-desc">
+      Adını boru tesisatındaki <strong>T-şekilli bağlantı parçasından</strong> alır. Standart girişten gelen veriyi aynı anda iki yere gönderir: hem standart çıkışa (ekran veya bir sonraki pipe) hem de belirtilen dosyaya. Böylece bir pipeline'ın ortasındaki veriyi kaybetmeden kayıt altına alabilirsiniz.
+    </p>
+    <div class="cmd-tags">
+      <span class="cmd-tag tag-green">Çift yönlü çıktı</span>
+      <span class="cmd-tag tag-green">Loglama</span>
+      <span class="cmd-tag tag-amber">Pipeline ara kayıt</span>
+    </div>
+    <div class="cmd-flags" style="margin-top:1rem;">
+      <span class="cmd-flag">-a</span><span class="cmd-flag-desc">Append — dosyanın üzerine yazmaz, sonuna ekler</span>
+      <span class="cmd-flag">(yok)</span><span class="cmd-flag-desc">Varsayılan: dosyayı sıfırdan yazar (overwrite)</span>
+    </div>
+  </div>
+
+  <div class="ders-notu open" id="dn0">
+    <div class="ders-notu-header" onclick="toggleDers('dn0')">
+      <div class="ders-notu-header-left">🎓 Ders Anlatımı — Bu Derste Ne Öğreneceğiz?</div>
+      <span class="dn-chevron">›</span>
+    </div>
+    <div class="ders-notu-body">
+      <div class="dn-step">
+        <div class="dn-num">1</div>
+        <div class="dn-content">
+          <h4>Shell bir komut satırını nasıl işler?</h4>
+          <p>Shell bir satırı okurken belirli bir öncelik sırasını izler: <strong>1)</strong> pipe ve yönlendirme operatörlerini saptar, <strong>2)</strong> değişkenleri genişletir, <strong>3)</strong> komutu çalıştırır. Bu sıra değiştirilemez — <code style="color:var(--accent)">eval</code> olmadan değişken içindeki <code style="color:var(--accent)">|</code> sembolü hiçbir zaman gerçek pipe olarak tanınmaz.</p>
+        </div>
+      </div>
+      <div class="dn-step">
+        <div class="dn-num">2</div>
+        <div class="dn-content">
+          <h4>eval neden iki kez tarar?</h4>
+          <p><code style="color:var(--accent)">eval</code> şunu yapar: <strong>1. tarama</strong> — değişkenleri açar (<code style="color:var(--accent)">$pipe</code> → <code style="color:var(--accent)">|</code>). <strong>2. tarama</strong> — oluşan satırı yeniden çalıştırır; bu sefer <code style="color:var(--accent)">|</code> gerçek pipe olarak tanınır. İki adım olmadan değişken içindeki özel karakterler sessizce hata verir.</p>
+        </div>
+      </div>
+      <div class="dn-step">
+        <div class="dn-num">3</div>
+        <div class="dn-content">
+          <h4>tee neden sadece yönlendirme ile aynı değil?</h4>
+          <p><code style="color:var(--accent)">ls &gt; liste.txt</code> yazarsanız çıktıyı yalnızca dosyaya yönlendirirsiniz — ekranda hiçbir şey göremezsiniz. <code style="color:var(--accent)">ls | tee liste.txt</code> ise çıktıyı hem dosyaya kaydeder hem de sonraki komuta iletmeye devam eder. Pipeline'ı kırmadan "ara snapshot" almak için biçilmiş kaftan.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="next-row">
+    <button class="next-btn" onclick="goto(1)">Devam: eval Temelleri →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SEC 1  EVAL TEMELLERİ
+══════════════════════════════════════ -->
+<div class="sec" id="sec1">
+  <div class="section-num">02 eval — Temeller</div>
+  <h1 class="section-title">İki Kez Tarama Mantığı</h1>
+  <p class="section-intro">
+    <code style="color:var(--accent)">eval</code> komutunun anlaşılması için önce shell'in işleme sıralamasını bilmek gerekir. Slayttaki klasik pipe hatası bu sorunu çok iyi örnekler.
+  </p>
+
+  <!-- AKIŞ DİYAGRAMI -->
+  <div class="flow-wrap">
+    <div class="flow-label">eval olmadan — pipe değişkeni neden hata verir?</div>
+    <div class="flow" style="gap:.4rem;">
+      <div class="flow-box hi"><div>Komut</div><div class="flow-lbl">ls $pipe wc -l</div></div>
+      <div class="flow-arr">→</div>
+      <div class="flow-box hi3"><div>1. Adım</div><div class="flow-lbl">| ve &gt; aranır</div></div>
+      <div class="flow-arr">→</div>
+      <div class="flow-box"><div>2. Adım</div><div class="flow-lbl">$pipe → "|" açılır</div></div>
+      <div class="flow-arr">→</div>
+      <div class="flow-box hi4"><div>Hata!</div><div class="flow-lbl">| artık işlenmez</div></div>
+    </div>
+    <div style="margin-top:.75rem;border-top:1px solid var(--border);padding-top:.75rem;">
+    <div class="flow-label">eval ile — iki tarama sorunu çözer</div>
+    <div class="flow" style="gap:.4rem;">
+      <div class="flow-box hi"><div>eval ...</div><div class="flow-lbl">eval ls $pipe wc -l</div></div>
+      <div class="flow-arr">→</div>
+      <div class="flow-box"><div>1. Tarama</div><div class="flow-lbl">$pipe → | açılır</div></div>
+      <div class="flow-arr">→</div>
+      <div class="flow-box hi3"><div>2. Tarama</div><div class="flow-lbl">ls | wc -l çalışır</div></div>
+      <div class="flow-arr">→</div>
+      <div class="flow-box hi2"><div>Sonuç</div><div class="flow-lbl">16</div></div>
+    </div>
+    </div>
+  </div>
+
+  <div class="example open" id="ex1">
+    <div class="example-header" onclick="toggleEx('ex1')">
+      <div class="example-header-left">
+        <span class="diff-badge diff-easy">Basit</span>
+        <span class="example-title">Slayttaki pipe hatası ve eval çözümü (Slide 66)</span>
+      </div>
+      <div class="example-meta">~1 dk <span class="chevron">›</span></div>
+    </div>
+    <div class="example-body">
+      <p style="font-size:14px;color:var(--text2);margin-bottom:.75rem">Slayttaki örneği adım adım inceleyelim. <code style="color:var(--accent)">pipe="|"</code> atandıktan sonra shell bu değişkeni pipe olarak tanımaz:</p>
+      <div class="term-header"><div class="term-dots"><span></span><span></span><span></span></div><span class="term-lang">bash</span></div>
+      <div class="term-body">
+<span class="p">$&gt; </span><span class="c">pipe="|"</span><br>
+<span class="p">$&gt; </span><span class="c">ls $pipe wc -l</span>      <span class="cm"># shell | sembolünü dosya adı sanıyor</span><br>
+<span class="err-c">|: No such file or directory</span><br>
+<span class="err-c">wc: No such file or directory</span><br>
+<span class="err-c">-l: No such file or directory</span><br><br>
+<span class="cm"># eval ile çözüm:</span><br>
+<span class="p">$&gt; </span><span class="c">eval ls $pipe wc -l</span>    <span class="cm"># 1.tarama: ls | wc -l  →  2.tarama: gerçek pipe!</span><br>
+<span class="o">16</span>    <span class="cm">← dizindeki dosya sayısı</span><br><br>
+<span class="cm"># En basit örnek:</span><br>
+<span class="p">$&gt; </span><span class="c">eval echo hello</span><br>
+<span class="o">hello</span>
+      </div>
+      <div class="info-box warn" style="margin-top:.75rem;">
+        <div class="info-box-title">⚠️ Neden böyle oluyor?</div>
+        <p>Shell işleme sırası: <strong>1) pipe/yönlendirme tespiti → 2) değişken genişletme → 3) çalıştırma</strong></p>
+        <p><code style="color:var(--accent3)">ls $pipe wc -l</code> yazıldığında 1. adımda pipe sembolü bulunamaz (henüz <code style="color:var(--accent3)">$pipe</code> açılmadı). 2. adımda <code style="color:var(--accent3)">$pipe</code> açılır ama artık pipe saptama adımı geçilmiştir. Shell <code style="color:var(--accent3)">|</code>'ı dosya adı olarak görür.</p>
+      </div>
+      <div class="run-wrap"><button class="run-btn" onclick="simRun('s1')">▶ Simüle et</button></div>
+      <div class="sim-out" id="s1">$ pipe="|"
+$ ls $pipe wc -l
+|: No such file or directory
+wc: No such file or directory
+-l: No such file or directory
+
+$ eval ls $pipe wc -l
+16   ← eval sayesinde gerçek pipe çalıştı!
+
+$ eval echo hello
+hello</div>
+    </div>
+  </div>
+
+  <div class="example" id="ex2">
+    <div class="example-header" onclick="toggleEx('ex2')">
+      <div class="example-header-left">
+        <span class="diff-badge diff-mid">Orta</span>
+        <span class="example-title">eval ile değişkende yönlendirme ve komut saklamak</span>
+      </div>
+      <div class="example-meta">~2 dk <span class="chevron">›</span></div>
+    </div>
+    <div class="example-body">
+      <p style="font-size:14px;color:var(--text2);margin-bottom:.75rem">Komut termitatörleri <code style="color:var(--accent)">;</code> ve yönlendirme <code style="color:var(--accent)">&gt;</code> da değişken içinde eval olmadan çalışmaz:</p>
+      <div class="term-header"><div class="term-dots"><span></span><span></span><span></span></div><span class="term-lang">bash</span></div>
+      <div class="term-body">
+<span class="cm"># Değişken içinde yönlendirme</span><br>
+<span class="p">$&gt; </span><span class="c">yon="&gt; cikti.txt"</span><br>
+<span class="p">$&gt; </span><span class="c">eval echo "merhaba" $yon</span>    <span class="cm"># cikti.txt dosyasına yazar</span><br>
+<span class="p">$&gt; </span><span class="c">cat cikti.txt</span><br>
+<span class="o">merhaba</span><br><br>
+<span class="cm"># Değişkende tam komut saklamak</span><br>
+<span class="p">$&gt; </span><span class="c">cmd="ls -la | head -5"</span><br>
+<span class="p">$&gt; </span><span class="c">eval $cmd</span><br>
+<span class="o">total 64</span><br>
+<span class="o">drwxr-xr-x  8 iclal staff  256 Oca 15 10:23 .</span><br>
+<span class="o">drwxr-xr-x  3 iclal staff   96 Oca 14 09:15 ..</span><br>
+<span class="o">-rw-r--r--  1 iclal staff 1234 Oca 15 10:23 README.md</span><br>
+<span class="o">-rwxr-xr-x  1 iclal staff  512 Oca 15 09:45 script.sh</span><br><br>
+<span class="cm"># Komut terminatörü ; değişkende</span><br>
+<span class="p">$&gt; </span><span class="c">ayrac=";"</span><br>
+<span class="p">$&gt; </span><span class="c">eval echo ilk $ayrac echo ikinci</span><br>
+<span class="o">ilk</span><br>
+<span class="o">ikinci</span>
+      </div>
+      <div class="run-wrap"><button class="run-btn" onclick="simRun('s2')">▶ Simüle et</button></div>
+      <div class="sim-out" id="s2">$ yon="> cikti.txt"
+$ eval echo "merhaba" $yon
+$ cat cikti.txt
+merhaba
+
+$ cmd="ls -la | head -5"
+$ eval $cmd
+total 64
+drwxr-xr-x  8 iclal staff  256 . 
+drwxr-xr-x  3 iclal staff   96 ..
+-rw-r--r--  1 iclal staff 1234 README.md
+-rwxr-xr-x  1 iclal staff  512 script.sh
+
+$ ayrac=";"
+$ eval echo ilk $ayrac echo ikinci
+ilk
+ikinci</div>
+    </div>
+  </div>
+
+  <div class="next-row">
+    <button class="next-btn" onclick="goto(2)">Devam: eval İleri →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SEC 2  EVAL İLERİ
+══════════════════════════════════════ -->
+<div class="sec" id="sec2">
+  <div class="section-num">03 eval — İleri Kullanım</div>
+  <h1 class="section-title">Son Argümanı Okumak · last Script'i</h1>
+  <p class="section-intro">
+    Slayttaki en çarpıcı eval örneği tek satırla son argümanı okuyan <code style="color:var(--accent)">last</code> script'idir. Bu örnek eval'ın iki-tarama mantığını kristal netliğiyle gösterir.
+  </p>
+
+  <div class="info-box">
+    <div class="info-box-title">💡 Kullanılan Özel Değişkenler</div>
+    <p><code style="color:var(--accent)">$#</code> → script'e geçilen toplam argüman sayısı</p>
+    <p><code style="color:var(--accent)">$1, $2, $3...</code> → sıralı argümanlar</p>
+    <p><code style="color:var(--accent)">\$</code> → eval'ın 1. taramasında $ olarak korunur, 2. taramada değişkene dönüşür</p>
+  </div>
+
+  <div class="example open" id="ex3">
+    <div class="example-header" onclick="toggleEx('ex3')">
+      <div class="example-header-left">
+        <span class="diff-badge diff-mid">Orta</span>
+        <span class="example-title">last script'i — slayttaki örnek (Slide 67)</span>
+      </div>
+      <div class="example-meta">~3 dk <span class="chevron">›</span></div>
+    </div>
+    <div class="example-body">
+      <div class="script-file">
+        <div class="script-file-header">
+          <span class="script-file-name">last</span>
+          <span class="script-file-badge">bash script — slayttaki örnek</span>
+        </div>
+        <div class="term-body">
+<span class="c">eval echo \$$#</span>
+        </div>
+      </div>
+
+      <div class="term-header" style="margin-top:.75rem;"><div class="term-dots"><span></span><span></span><span></span></div><span class="term-lang">bash — adım adım çözümleme</span></div>
+      <div class="term-body">
+<span class="p">$&gt; </span><span class="c">last one two three four</span><br><br>
+<span class="cm"># Adım 1: $# = 4  (4 argüman var)</span><br>
+<span class="cm"># Adım 2: \$ → eval için korunan $ sembolü (henüz açılmasın)</span><br>
+<span class="cm"># 1. Tarama:  eval echo \$$#  →  eval echo $4</span><br>
+<span class="cm">#             \$ → $ olur,  $# → 4 olur,  sonuç: $4</span><br>
+<span class="cm"># 2. Tarama:  echo $4  →  four</span><br><br>
+<span class="o">four</span><br><br>
+<span class="p">$&gt; </span><span class="c">last *</span>    <span class="cm"># * tüm dosyaları genişletir, son dosyayı getirir</span><br>
+<span class="o">zebra.txt</span>    <span class="cm">← alfabetik son dosya adı</span>
+      </div>
+
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-top:.75rem;">
+        <p style="font-size:12px;color:var(--text3);margin-bottom:.6rem;text-transform:uppercase;letter-spacing:.05em;">Adım adım görsel çözümleme</p>
+        <div style="font-family:var(--mono);font-size:13px;line-height:2;">
+          <span style="color:var(--accent3)">eval echo \$$#</span><br>
+          <span style="color:var(--text3)">──────────────────────────</span><br>
+          <span style="color:var(--text2)">$# = </span><span style="color:var(--accent2)">4</span>
+          <span style="color:var(--text2)">,  \$ → </span><span style="color:var(--accent2)">$</span><br>
+          <span style="color:var(--text2)">1. tarama sonucu: </span><span style="color:var(--accent)">echo $4</span><br>
+          <span style="color:var(--text2)">2. tarama sonucu: </span><span style="color:var(--accent2)">four</span>
+        </div>
+      </div>
+
+      <div class="info-box success" style="margin-top:.75rem;">
+        <div class="info-box-title">🌐 Gerçek Hayat: Dinamik Komut Üretme</div>
+        <p>CI/CD pipeline'larında hangi sunucuya hangi komutu çalıştıracağınız çalışma zamanında belli olur. <code style="color:var(--accent)">eval</code> bu dinamizmi sağlar. Özellikle konfigürasyon dosyasından okunan komutları çalıştırmak için yaygın kullanılır.</p>
+      </div>
+      <div class="run-wrap"><button class="run-btn" onclick="simRun('s3')">▶ Simüle et</button></div>
+      <div class="sim-out" id="s3">$ cat last
+eval echo \$$#
+
+$ last one two three four
+# $# = 4
+# 1. tarama: eval echo $4
+# 2. tarama: echo $4 → four
+four
+
+$ last *
+zebra.txt   ← alfabetik son dosya</div>
+    </div>
+  </div>
+
+  <div class="example" id="ex4">
+    <div class="example-header" onclick="toggleEx('ex4')">
+      <div class="example-header-left">
+        <span class="diff-badge diff-hard">Zor</span>
+        <span class="example-title">eval Güvenlik Uyarısı ve Dinamik Değişken</span>
+      </div>
+      <div class="example-meta">~3 dk <span class="chevron">›</span></div>
+    </div>
+    <div class="example-body">
+      <div class="term-header"><div class="term-dots"><span></span><span></span><span></span></div><span class="term-lang">bash — dinamik değişken adı</span></div>
+      <div class="term-body">
+<span class="cm"># eval ile dinamik değişken oluşturma</span><br>
+<span class="kw">for</span><span class="c"> i in 1 2 3; </span><span class="kw">do</span><br>
+<span class="c">    eval "sunucu$i=192.168.1.$i"</span><br>
+<span class="kw">done</span><br><br>
+<span class="kw">for</span><span class="c"> i in 1 2 3; </span><span class="kw">do</span><br>
+<span class="c">    eval echo "Sunucu $i: \$sunucu$i"</span><br>
+<span class="kw">done</span><br><br>
+<span class="o">Sunucu 1: 192.168.1.1</span><br>
+<span class="o">Sunucu 2: 192.168.1.2</span><br>
+<span class="o">Sunucu 3: 192.168.1.3</span>
+      </div>
+      <div class="info-box danger" style="margin-top:.75rem;">
+        <div class="info-box-title">🚨 Kritik Güvenlik Uyarısı</div>
+        <p><code style="color:var(--accent4)">eval "$kullanici_girdisi"</code> yazmak son derece tehlikelidir. Kullanıcı <code style="color:var(--accent4)">; rm -rf /</code> gibi bir girdi verirse eval bunu doğrudan çalıştırır.</p>
+        <p>eval yalnızca <strong>güvenilir, sabit değerlerle</strong> kullanılmalıdır. Kullanıcıdan gelen veriyi asla eval'a vermeyin!</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="next-row">
+    <button class="next-btn" onclick="goto(3)">Devam: tee Komutu →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SEC 3  TEE
+══════════════════════════════════════ -->
+<div class="sec" id="sec3">
+  <div class="section-num">04 tee Komutu</div>
+  <h1 class="section-title">Çıktıyı Hem Ekrana Hem Dosyaya</h1>
+  <p class="section-intro">
+    <code style="color:var(--accent2)">tee</code>, boru hattının ortasına yerleştirilen bir veri dağıtıcısıdır. Standart girişten okuduğu veriyi <strong>aynı anda</strong> hem standart çıkışa hem de belirtilen dosyaya yazar. Pipeline'ı kesmeden ara veri almayı mümkün kılar.
+  </p>
+
+  <!-- TEE DİYAGRAMI -->
+  <div class="flow-wrap">
+    <div class="flow-label">tee'nin T-şekilli veri akışı</div>
+    <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">
+      <div class="flow-box hi" style="min-width:90px;"><div>Komut</div><div class="flow-lbl">date / ls / ps</div></div>
+      <div class="flow-arr">→</div>
+      <div class="flow-box" style="border-color:var(--accent2);color:var(--accent2);background:rgba(56,201,160,.08);min-width:50px;font-size:20px;font-weight:700;">T</div>
+      <div class="flow-arr">→</div>
+      <div class="tee-split">
+        <div style="display:flex;align-items:center;gap:.4rem;">
+          <div class="flow-box hi2" style="min-width:110px;"><div>Ekran / stdout</div><div class="flow-lbl">kullanıcı görür</div></div>
+          <span style="font-size:12px;color:var(--accent2);">← her zaman</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:.4rem;">
+          <div class="flow-box hi3" style="min-width:110px;"><div>Dosya</div><div class="flow-lbl">now / list / log</div></div>
+          <span style="font-size:12px;color:var(--accent3);">← aynı anda</span>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:.75rem;font-size:13px;color:var(--text2);">
+      <code style="color:var(--accent2);">tee -a dosya</code> kullanılırsa dosyaya <strong>ekleme (append)</strong> yapar, üzerine yazmaz.
+    </div>
+  </div>
+
+  <div class="example open" id="ex5">
+    <div class="example-header" onclick="toggleEx('ex5')">
+      <div class="example-header-left">
+        <span class="diff-badge diff-easy">Basit</span>
+        <span class="example-title">Slayttaki tee örnekleri (Slide 83)</span>
+      </div>
+      <div class="example-meta">~1 dk <span class="chevron">›</span></div>
+    </div>
+    <div class="example-body">
+      <div class="term-header"><div class="term-dots"><span></span><span></span><span></span></div><span class="term-lang">bash</span></div>
+      <div class="term-body">
+<span class="cm"># Örnek 1: date çıktısını ekrana yaz ve "now" dosyasına kaydet</span><br>
+<span class="p">$&gt; </span><span class="c">date | tee now</span><br>
+<span class="o">Pzt Oca 15 10:23:45 TRT 2024</span>    <span class="cm">← ekranda görünür</span><br>
+<span class="p">$&gt; </span><span class="c">cat now</span><br>
+<span class="o">Pzt Oca 15 10:23:45 TRT 2024</span>    <span class="cm">← dosyada da var</span><br><br>
+<span class="cm"># Örnek 2: ls → tee "list" dosyasına yazar → wc satır sayar</span><br>
+<span class="cm"># Pipeline kırılmıyor: tee hem kaydeder hem wc'ye iletir</span><br>
+<span class="p">$&gt; </span><span class="c">ls | tee list | wc</span><br>
+<span class="o">      8       8      64</span>    <span class="cm">← wc'nin çıktısı</span><br>
+<span class="p">$&gt; </span><span class="c">cat list</span><br>
+<span class="o">belgeler  indirmeler  masaüstü  müzik  resimler ...</span><br><br>
+<span class="cm"># Örnek 3: ps çıktısı kaydedilir, aynı anda grep ile filtrelenir</span><br>
+<span class="p">$&gt; </span><span class="c">ps -ael | tee processes | grep "$UID"</span><br>
+<span class="o">5  0  1234  ...  bash</span>    <span class="cm">← bu kullanıcının işlemleri ekranda</span><br>
+<span class="cm"># "processes" dosyasında TÜM işlemler kayıtlı</span>
+      </div>
+      <div class="run-wrap"><button class="run-btn" onclick="simRun('s5')">▶ Simüle et</button></div>
+      <div class="sim-out" id="s5">$ date | tee now
+Pzt Oca 15 10:23:45 TRT 2024
+$ cat now
+Pzt Oca 15 10:23:45 TRT 2024
+
+$ ls | tee list | wc
+      8       8      64
+$ cat list
+belgeler  indirmeler  masaüstü  müzik  resimler ...
+
+$ ps -ael | tee processes | grep "$UID"
+5  0  1234 ... bash
+5  0  1235 ... ./script.sh
+# "processes" dosyasında tüm işlemler kayıtlı</div>
+    </div>
+  </div>
+
+  <div class="example" id="ex6">
+    <div class="example-header" onclick="toggleEx('ex6')">
+      <div class="example-header-left">
+        <span class="diff-badge diff-mid">Orta</span>
+        <span class="example-title">tee -a ile loglama ve pipeline zinciri</span>
+      </div>
+      <div class="example-meta">~2 dk <span class="chevron">›</span></div>
+    </div>
+    <div class="example-body">
+      <p style="font-size:14px;color:var(--text2);margin-bottom:.75rem"><code style="color:var(--accent2)">tee -a</code> mevcut dosyanın üzerine yazmaz, sonuna ekler. Loglama için idealdir:</p>
+      <div class="term-header"><div class="term-dots"><span></span><span></span><span></span></div><span class="term-lang">bash</span></div>
+      <div class="term-body">
+<span class="cm"># -a (append): dosyayı silmeden sonuna ekle</span><br>
+<span class="p">$&gt; </span><span class="c">echo "Başlatıldı: $(date)" | tee -a sistem.log</span><br>
+<span class="o">Başlatıldı: Pzt Oca 15 10:23:45 TRT 2024</span><br>
+<span class="p">$&gt; </span><span class="c">echo "Görev tamamlandı" | tee -a sistem.log</span><br>
+<span class="o">Görev tamamlandı</span><br>
+<span class="p">$&gt; </span><span class="c">cat sistem.log</span><br>
+<span class="o">Başlatıldı: Pzt Oca 15 10:23:45 TRT 2024</span><br>
+<span class="o">Görev tamamlandı</span>    <span class="cm">← her ikisi de kayıtlı</span><br><br>
+<span class="cm"># Uzun pipeline'da ara veri alma</span><br>
+<span class="p">$&gt; </span><span class="c">cat access.log | tee ham_veri.txt | grep "ERROR" | tee hatalar.txt | wc -l</span><br>
+<span class="o">42</span>    <span class="cm">← hata satırı sayısı ekranda</span><br>
+<span class="cm"># ham_veri.txt = tüm log, hatalar.txt = sadece ERROR satırları</span>
+      </div>
+      <div class="info-box success" style="margin-top:.75rem;">
+        <div class="info-box-title">🌐 Gerçek Hayat: CI/CD & Log Yönetimi</div>
+        <p>Jenkins ve GitLab CI'da build çıktısı hem arayüzde gösterilir hem arşivlenir — tam olarak <code style="color:var(--accent)">tee</code> mantığıyla. Büyük sistemlerde <code style="color:var(--accent)">tee</code> zinciri ham veriyi, hataları ve özet metrikleri aynı anda farklı dosyalara kaydedebilir.</p>
+      </div>
+      <div class="run-wrap"><button class="run-btn" onclick="simRun('s6')">▶ Simüle et</button></div>
+      <div class="sim-out" id="s6">$ echo "Başlatıldı: $(date)" | tee -a sistem.log
+Başlatıldı: Pzt Oca 15 10:23:45 TRT 2024
+
+$ echo "Görev tamamlandı" | tee -a sistem.log
+Görev tamamlandı
+
+$ cat sistem.log
+Başlatıldı: Pzt Oca 15 10:23:45 TRT 2024
+Görev tamamlandı
+
+$ cat access.log | tee ham_veri.txt | grep "ERROR" | tee hatalar.txt | wc -l
+42
+# ham_veri.txt = tüm log
+# hatalar.txt  = sadece ERROR satırları</div>
+    </div>
+  </div>
+
+  <div class="example" id="ex7">
+    <div class="example-header" onclick="toggleEx('ex7')">
+      <div class="example-header-left">
+        <span class="diff-badge diff-hard">Zor</span>
+        <span class="example-title">Script: eval + tee birlikte — dinamik pipeline loglama</span>
+      </div>
+      <div class="example-meta">~4 dk <span class="chevron">›</span></div>
+    </div>
+    <div class="example-body">
+      <p style="font-size:14px;color:var(--text2);margin-bottom:.75rem">eval ve tee'nin birlikte kullanıldığı gerçekçi bir senaryo: kullanıcı hangi komutu çalıştıracağını belirler, çıktı otomatik loglanır.</p>
+      <div class="script-file">
+        <div class="script-file-header">
+          <span class="script-file-name">calistir_ve_logla.sh</span>
+          <span class="script-file-badge">bash script</span>
+        </div>
+        <div class="term-body">
+<span class="cm">#!/bin/bash</span><br>
+<span class="c">LOG="islem_$(date +%Y%m%d_%H%M%S).log"</span><br>
+<span class="c">pipe="|"</span><br><br>
+<span class="c">echo </span><span class="str">"Hangi komutu çalıştırmak istersiniz?"</span><br>
+<span class="c">echo </span><span class="str">"1) Dosya sayısı  2) Disk kullanımı  3) Aktif işlemler"</span><br>
+<span class="c">read -p </span><span class="str">"Seçim: "</span><span class="c"> secim</span><br><br>
+<span class="kw">case</span><span class="c"> $secim </span><span class="kw">in</span><br>
+<span class="c">  1) CMD="ls $pipe wc -l" ;;</span><br>
+<span class="c">  2) CMD="df -h $pipe head -5" ;;</span><br>
+<span class="c">  3) CMD="ps aux $pipe head -10" ;;</span><br>
+<span class="c">  *) echo </span><span class="str">"Geçersiz seçim"</span><span class="c">; exit 1 ;;</span><br>
+<span class="kw">esac</span><br><br>
+<span class="c">echo </span><span class="str">"Çalıştırılıyor: $CMD"</span><br>
+<span class="c">eval $CMD | tee -a "$LOG"</span>    <span class="cm"># eval pipe'ı aktifleştirir, tee loglar</span><br>
+<span class="c">echo </span><span class="str">"Log: $LOG"</span>
+        </div>
+      </div>
+      <div class="run-wrap"><button class="run-btn" onclick="simRun('s7')">▶ Simüle et</button></div>
+      <div class="sim-out" id="s7">$ ./calistir_ve_logla.sh
+Hangi komutu çalıştırmak istersiniz?
+1) Dosya sayısı  2) Disk kullanımı  3) Aktif işlemler
+Seçim: 1
+Çalıştırılıyor: ls | wc -l
+      16
+Log: islem_20240115_102345.log
+
+$ cat islem_20240115_102345.log
+      16</div>
+    </div>
+  </div>
+
+  <div class="next-row">
+    <button class="next-btn" onclick="goto(4)">Devam: Özet & Sınav →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SEC 4  ÖZET & SINAV
+══════════════════════════════════════ -->
+<div class="sec" id="sec4">
+  <div class="section-num">05 Özet & Sınav</div>
+  <h1 class="section-title">Cheat Sheet & Bilgi Sınaması</h1>
+
+  <div class="summary-grid">
+    <div class="sum-card num"><span class="sum-code">eval komut</span><span class="sum-desc">Komut satırını iki kez tara ve çalıştır</span></div>
+    <div class="sum-card num"><span class="sum-code">pipe="|"</span><span class="sum-desc">Değişkende pipe sakla — eval olmadan çalışmaz</span></div>
+    <div class="sum-card num"><span class="sum-code">eval ls $pipe wc</span><span class="sum-desc">Değişken içindeki | gerçek pipe'a dönüşür</span></div>
+    <div class="sum-card num"><span class="sum-code">eval echo \$$#</span><span class="sum-desc">Son argümanı oku — \$ ikinci taramada $ olur</span></div>
+    <div class="sum-card warn"><span class="sum-code">eval "$girdi"</span><span class="sum-desc">Kullanıcı girdisiyle ASLA kullanma — komut enjeksiyonu riski!</span></div>
+    <div class="sum-card tip"><span class="sum-code">cmd | tee dosya</span><span class="sum-desc">Hem ekrana hem dosyaya yaz</span></div>
+    <div class="sum-card tip"><span class="sum-code">tee -a dosya</span><span class="sum-desc">Üzerine yazmaz, sona ekler (append)</span></div>
+    <div class="sum-card tip"><span class="sum-code">cmd | tee f | cmd2</span><span class="sum-desc">Pipeline kırmadan ara kayıt al</span></div>
+    <div class="sum-card"><span class="sum-code">ls > liste</span><span class="sum-desc">Yalnızca dosyaya — ekranda görünmez</span></div>
+    <div class="sum-card tip"><span class="sum-code">ls | tee liste</span><span class="sum-desc">Hem dosyaya hem ekrana — fark bu!</span></div>
+  </div>
+
+  <div class="info-box warn" style="margin-bottom:1.5rem;">
+    <div class="info-box-title">🔁 eval vs tee — Farkı Hatırlayın</div>
+    <p><strong>eval</strong>: Kabuk işleme sırasını aşmak için — değişken içindeki özel karakterleri aktif hale getirir.</p>
+    <p><strong>tee</strong>: Veri akışını çoğaltmak için — aynı veriyi iki hedefe aynı anda gönderir.</p>
+  </div>
+
+  <hr class="divider">
+  <h2 style="font-size:18px;font-weight:500;margin-bottom:1.25rem;color:var(--text);">🎯 Bilgi Sınaması</h2>
+  <div class="progress-bar-wrap"><div class="progress-bar" id="qProgress" style="width:0%"></div></div>
+  <div id="qBox"></div>
+
+  <div style="margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border);">
+    <p style="font-size:12px;color:var(--text3);">Kaynak: Chapter Eight — Basic Shell Scripting (Slide 66–67, 83) · Hazırlayan: İclal Gül</p>
+  </div>
+</div>
+
+</main>
+
+<footer>
+  <div class="footer-info">Hafta 8 · eval Komutu · İki Kez Tarama · tee · Pipeline Loglama</div>
+  <div class="footer-actions">
+    <button class="foot-btn" onclick="goto(0)">↩ Başa Dön</button>
+    <button class="foot-btn" onclick="window.print()">🖨 Yazdır / PDF</button>
+  </div>
+</footer>
+
+<script>
+/* TIMER */
+let timerSec=900,timerRunning=false,timerInterval=null;
+function fmt(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
+function toggleTimer(){
+  if(timerRunning){clearInterval(timerInterval);timerRunning=false;document.getElementById('timerStartBtn').textContent='▶ Başlat';}
+  else{timerInterval=setInterval(()=>{if(timerSec>0){timerSec--;document.getElementById('timerDisplay').textContent=fmt(timerSec);}else clearInterval(timerInterval);},1000);timerRunning=true;document.getElementById('timerStartBtn').textContent='⏸ Duraklat';}
+}
+function resetTimer(){clearInterval(timerInterval);timerRunning=false;timerSec=900;document.getElementById('timerDisplay').textContent='15:00';document.getElementById('timerStartBtn').textContent='▶ Başlat';}
+
+/* NAV */
+const visited=new Set([0]);
+function goto(i){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  document.getElementById('sec'+i).classList.add('active');
+  visited.add(i);
+  document.querySelectorAll('.nav-pill').forEach((p,idx)=>{
+    p.classList.remove('active','done');
+    if(idx===i)p.classList.add('active');
+    else if(visited.has(idx))p.classList.add('done');
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(i===4)renderQ();
+}
+function toggleEx(id){document.getElementById(id).classList.toggle('open');}
+function toggleDers(id){document.getElementById(id).classList.toggle('open');}
+function simRun(id){document.getElementById(id).classList.add('show');}
+
+/* QUIZ */
+const questions=[
+  {q:"eval komutunun temel işlevi nedir?",opts:["Komutları arka planda çalıştırır","Komut satırını iki kez tarayarak çalıştırır","Dosyaları sıkıştırır","Değişkenleri siler"],ans:1,exp:"eval bir komut satırını önce değişkenleri açarak, ardından sonucu yeniden komut olarak yorumlayarak iki kez çalıştırır."},
+  {q:"pipe='|' atandıktan sonra ls $pipe wc -l neden hata verir?",opts:["ls komutu yanlış yazılmış","wc komutu mevcut değil","Shell pipe operatörlerini değişken genişlemesinden önce işler; $pipe açıldığında iş işten geçmiştir","Değişken adı yanlış"],ans:2,exp:"Shell işleme sırası: 1) pipe/yönlendirme tespiti, 2) değişken genişletme. $pipe'ın açılacağı 2. adımda pipe tespiti çoktan tamamlanmıştır."},
+  {q:"eval echo \\$$# komutunda 'last one two three four' çalıştırılırsa çıktı ne olur?",opts:["one","four","last","$4"],ans:1,exp:"$# = 4 (4 argüman var). 1. tarama: \\$$# → $4 olur. 2. tarama: $4 → four döner."},
+  {q:"eval kullanımında hangi durum güvenlik riski oluşturur?",opts:["Büyük dosyalarla kullanmak","Kullanıcıdan gelen veriyi doğrudan eval'a vermek","pipe değişkeni kullanmak","Çok sayıda argüman geçmek"],ans:1,exp:"eval kullanıcı girdisini komut olarak çalıştırır. Kötü niyetli kullanıcı 'rm -rf /' gibi tehlikeli komutlar enjekte edebilir."},
+  {q:"tee komutu çıktıyı nereye yönlendirir?",opts:["Yalnızca dosyaya","Yalnızca ekrana","Hem ekrana (stdout) hem dosyaya aynı anda","Yalnızca bir sonraki pipe komutuna"],ans:2,exp:"tee T-şeklindeki boru bağlantısından adını alır. Veriyi hem stdout'a hem belirtilen dosyaya eş zamanlı olarak gönderir."},
+  {q:"ls | tee liste | wc komutunda tee'nin rolü nedir?",opts:["Yalnızca wc'ye veri göndermek","ls çıktısını hem 'liste' dosyasına kaydetmek hem wc'ye iletmek","ls'yi durdurup sonucu dosyaya yazmak","wc çıktısını 'liste' dosyasına yazmak"],ans:1,exp:"tee ls çıktısını 'liste' dosyasına yazar ve aynı zamanda pipe aracılığıyla wc komutuna iletmeye devam eder. İki işlem eş zamanlı gerçekleşir."},
+  {q:"tee -a dosya komutunda -a bayrağının anlamı nedir?",opts:["Tüm dosyaları listele","Dosyanın üzerine yaz (overwrite)","Dosyaya ekle (append), mevcut içeriği koru","Hata çıktısını da yakala"],ans:2,exp:"-a (append) bayrağı ile tee mevcut dosya içeriğini silmez, yeni veriyi sonuna ekler. Sürekli loglama için idealdir."},
+  {q:"ls > liste.txt ile ls | tee liste.txt arasındaki temel fark nedir?",opts:["Hiç fark yok","ls > liste.txt daha hızlı","ls > liste.txt ekranda görünmez; tee hem dosyaya yazar hem ekranda gösterir","tee daha az disk alanı kullanır"],ans:2,exp:"> yönlendirmesi çıktıyı tamamen dosyaya aktarır, ekranda hiçbir şey görünmez. tee ise çıktıyı hem dosyaya hem ekrana (ve pipe'a) aynı anda gönderir."}
+];
+
+let qIdx=0,qScore=0,qAnswered=false;
+function renderQ(){
+  const q=questions[qIdx];
+  document.getElementById('qProgress').style.width=(qIdx/questions.length*100)+'%';
+  let html=`<div class="quiz-counter">Soru ${qIdx+1} / ${questions.length}</div>
+  <div class="quiz-q">${q.q}</div><div class="quiz-opts">`;
+  q.opts.forEach((o,i)=>{html+=`<button class="qopt" id="qo${i}" onclick="pickQ(${i})">${o}</button>`;});
+  html+=`</div><div class="q-feedback" id="qfb"></div>
+  <div class="quiz-nav">
+    <button class="q-nav-btn" onclick="prevQ()" ${qIdx===0?'disabled':''}>← Geri</button>
+    <span class="score-txt">Skor: ${qScore} / ${questions.length}</span>
+    <button class="q-nav-btn" onclick="nextQ()" ${qIdx===questions.length-1?'disabled':''}>İleri →</button>
+  </div>`;
+  document.getElementById('qBox').innerHTML=html;
+  qAnswered=false;
+}
+function pickQ(i){
+  if(qAnswered)return; qAnswered=true;
+  const q=questions[qIdx];
+  document.querySelectorAll('.qopt').forEach(b=>b.disabled=true);
+  if(i===q.ans){document.getElementById('qo'+i).classList.add('correct');qScore++;document.getElementById('qfb').className='q-feedback ok';document.getElementById('qfb').textContent='✓ '+q.exp;}
+  else{document.getElementById('qo'+i).classList.add('wrong');document.getElementById('qo'+q.ans).classList.add('correct');document.getElementById('qfb').className='q-feedback no';document.getElementById('qfb').textContent='✗ Yanlış. '+q.exp;}
+  document.querySelector('.score-txt').textContent='Skor: '+qScore+' / '+questions.length;
+}
+function nextQ(){if(qIdx<questions.length-1){qIdx++;renderQ();}}
+function prevQ(){if(qIdx>0){qIdx--;renderQ();}}
+</script>
+</body>
+</html>
