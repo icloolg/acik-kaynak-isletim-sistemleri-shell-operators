@@ -568,53 +568,6 @@ $ ps -ael | tee processes | grep "$UID"
     </div>
   </div>
 
-  <div class="example" id="ex6">
-    <div class="example-header" onclick="toggleEx('ex6')">
-      <div class="example-header-left">
-        <span class="diff-badge diff-mid">Orta</span>
-        <span class="example-title">tee -a ile loglama ve pipeline zinciri</span>
-      </div>
-      <div class="example-meta">~2 dk <span class="chevron">›</span></div>
-    </div>
-    <div class="example-body">
-      <p style="font-size:14px;color:var(--text2);margin-bottom:.75rem"><code style="color:var(--accent2)">tee -a</code> mevcut dosyanın üzerine yazmaz, sonuna ekler. Loglama için idealdir:</p>
-      <div class="term-header"><div class="term-dots"><span></span><span></span><span></span></div><span class="term-lang">bash</span></div>
-      <div class="term-body">
-<span class="cm"># -a (append): dosyayı silmeden sonuna ekle</span><br>
-<span class="p">$&gt; </span><span class="c">echo "Başlatıldı: $(date)" | tee -a sistem.log</span><br>
-<span class="o">Başlatıldı: Pzt Oca 15 10:23:45 TRT 2024</span><br>
-<span class="p">$&gt; </span><span class="c">echo "Görev tamamlandı" | tee -a sistem.log</span><br>
-<span class="o">Görev tamamlandı</span><br>
-<span class="p">$&gt; </span><span class="c">cat sistem.log</span><br>
-<span class="o">Başlatıldı: Pzt Oca 15 10:23:45 TRT 2024</span><br>
-<span class="o">Görev tamamlandı</span>    <span class="cm">← her ikisi de kayıtlı</span><br><br>
-<span class="cm"># Uzun pipeline'da ara veri alma</span><br>
-<span class="p">$&gt; </span><span class="c">cat access.log | tee ham_veri.txt | grep "ERROR" | tee hatalar.txt | wc -l</span><br>
-<span class="o">42</span>    <span class="cm">← hata satırı sayısı ekranda</span><br>
-<span class="cm"># ham_veri.txt = tüm log, hatalar.txt = sadece ERROR satırları</span>
-      </div>
-      <div class="info-box success" style="margin-top:.75rem;">
-        <div class="info-box-title">🌐 Gerçek Hayat: CI/CD & Log Yönetimi</div>
-        <p>Jenkins ve GitLab CI'da build çıktısı hem arayüzde gösterilir hem arşivlenir — tam olarak <code style="color:var(--accent)">tee</code> mantığıyla. Büyük sistemlerde <code style="color:var(--accent)">tee</code> zinciri ham veriyi, hataları ve özet metrikleri aynı anda farklı dosyalara kaydedebilir.</p>
-      </div>
-      <div class="run-wrap"><button class="run-btn" onclick="simRun('s6')">▶ Simüle et</button></div>
-      <div class="sim-out" id="s6">$ echo "Başlatıldı: $(date)" | tee -a sistem.log
-Başlatıldı: Pzt Oca 15 10:23:45 TRT 2024
-
-$ echo "Görev tamamlandı" | tee -a sistem.log
-Görev tamamlandı
-
-$ cat sistem.log
-Başlatıldı: Pzt Oca 15 10:23:45 TRT 2024
-Görev tamamlandı
-
-$ cat access.log | tee ham_veri.txt | grep "ERROR" | tee hatalar.txt | wc -l
-42
-# ham_veri.txt = tüm log
-# hatalar.txt  = sadece ERROR satırları</div>
-    </div>
-  </div>
-
   <div class="example" id="ex7">
     <div class="example-header" onclick="toggleEx('ex7')">
       <div class="example-header-left">
