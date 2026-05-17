@@ -466,70 +466,7 @@ ikinci</div>
     <p><code style="color:var(--accent)">\$</code> → eval'ın 1. taramasında $ olarak korunur, 2. taramada değişkene dönüşür</p>
   </div>
 
-  <div class="example open" id="ex3">
-    <div class="example-header" onclick="toggleEx('ex3')">
-      <div class="example-header-left">
-        <span class="diff-badge diff-mid">Orta</span>
-        <span class="example-title">last script'i — slayttaki örnek (Slide 67)</span>
-      </div>
-      <div class="example-meta">~3 dk <span class="chevron">›</span></div>
-    </div>
-    <div class="example-body">
-      <div class="script-file">
-        <div class="script-file-header">
-          <span class="script-file-name">last</span>
-          <span class="script-file-badge">bash script — slayttaki örnek</span>
-        </div>
-        <div class="term-body">
-<span class="c">eval echo \$$#</span>
-        </div>
-      </div>
-
-      <div class="term-header" style="margin-top:.75rem;"><div class="term-dots"><span></span><span></span><span></span></div><span class="term-lang">bash — adım adım çözümleme</span></div>
-      <div class="term-body">
-<span class="p">$&gt; </span><span class="c">last one two three four</span><br><br>
-<span class="cm"># Adım 1: $# = 4  (4 argüman var)</span><br>
-<span class="cm"># Adım 2: \$ → eval için korunan $ sembolü (henüz açılmasın)</span><br>
-<span class="cm"># 1. Tarama:  eval echo \$$#  →  eval echo $4</span><br>
-<span class="cm">#             \$ → $ olur,  $# → 4 olur,  sonuç: $4</span><br>
-<span class="cm"># 2. Tarama:  echo $4  →  four</span><br><br>
-<span class="o">four</span><br><br>
-<span class="p">$&gt; </span><span class="c">last *</span>    <span class="cm"># * tüm dosyaları genişletir, son dosyayı getirir</span><br>
-<span class="o">zebra.txt</span>    <span class="cm">← alfabetik son dosya adı</span>
-      </div>
-
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-top:.75rem;">
-        <p style="font-size:12px;color:var(--text3);margin-bottom:.6rem;text-transform:uppercase;letter-spacing:.05em;">Adım adım görsel çözümleme</p>
-        <div style="font-family:var(--mono);font-size:13px;line-height:2;">
-          <span style="color:var(--accent3)">eval echo \$$#</span><br>
-          <span style="color:var(--text3)">──────────────────────────</span><br>
-          <span style="color:var(--text2)">$# = </span><span style="color:var(--accent2)">4</span>
-          <span style="color:var(--text2)">,  \$ → </span><span style="color:var(--accent2)">$</span><br>
-          <span style="color:var(--text2)">1. tarama sonucu: </span><span style="color:var(--accent)">echo $4</span><br>
-          <span style="color:var(--text2)">2. tarama sonucu: </span><span style="color:var(--accent2)">four</span>
-        </div>
-      </div>
-
-      <div class="info-box success" style="margin-top:.75rem;">
-        <div class="info-box-title">🌐 Gerçek Hayat: Dinamik Komut Üretme</div>
-        <p>CI/CD pipeline'larında hangi sunucuya hangi komutu çalıştıracağınız çalışma zamanında belli olur. <code style="color:var(--accent)">eval</code> bu dinamizmi sağlar. Özellikle konfigürasyon dosyasından okunan komutları çalıştırmak için yaygın kullanılır.</p>
-      </div>
-      <div class="run-wrap"><button class="run-btn" onclick="simRun('s3')">▶ Simüle et</button></div>
-      <div class="sim-out" id="s3">$ cat last
-eval echo \$$#
-
-$ last one two three four
-# $# = 4
-# 1. tarama: eval echo $4
-# 2. tarama: echo $4 → four
-four
-
-$ last *
-zebra.txt   ← alfabetik son dosya</div>
-    </div>
-  </div>
-
-  <div class="example" id="ex4">
+  <div class="example open" id="ex4">
     <div class="example-header" onclick="toggleEx('ex4')">
       <div class="example-header-left">
         <span class="diff-badge diff-hard">Zor</span>
